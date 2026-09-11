@@ -11,6 +11,7 @@ flutter pub get
 flutter test          # 49 个单测 + Widget 测试（全部离线，用 fixture）
 flutter run           # 连接真机/模拟器运行
 dart run tool/smoke.dart   # 可选：真实网络冒烟，输出 build/smoke_report.txt
+flutter test integration_test/beta_acceptance_test.dart -d <device>   # 真机端到端验收
 ```
 
 构建（**当前测试版 APK 即由此产出**）：
