@@ -6,9 +6,9 @@
 
 | 项 | 值 |
 |---|---|
-| 文件 | `dist/ApexScrolling-v0.1.0-beta-unsigned.ipa`（6.53 MB） |
-| SHA256 | `0d814587b6aede8703e206ac5196a3e3642db1e2802a0de4621ff3ad0b92225d` |
-| 构建来源 | GitHub Actions `iOS 未签名 IPA` run [34592918588](https://github.com/x192038743-sudo/ApexScrolling/actions/runs/34592918588)（2m36s 全绿） |
+| 文件 | `dist/ApexScrolling-v0.1.1-beta-unsigned.ipa`（约 6.5 MB） |
+| SHA256 | 见 `dist/SHA256SUMS.txt`（每次推送由 CI 重新生成） |
+| 构建来源 | GitHub Actions `iOS 未签名 IPA`（每次 push 到 main 自动重建，Actions 页面可下载） |
 | 仓库 | https://github.com/x192038743-sudo/ApexScrolling （private） |
 
 产物已校验：`Payload/Runner.app` 结构完整，`Runner` 为 arm64 Mach-O，

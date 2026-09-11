@@ -38,8 +38,8 @@ iOS（IPA）无法在 Windows 上编译，仓库已内置两条出包路径：Gi
 
 | 平台 | 文件 | 大小 |
 |---|---|---|
-| Android | `ApexScrolling-v0.1.0-beta-universal.apk` / `-arm64-v8a.apk` / `-armeabi-v7a.apk` | 45.7 / 16.3 / 13.9 MB |
-| iOS | `ApexScrolling-v0.1.0-beta-unsigned.ipa`（Sideloadly 自签） | 6.5 MB |
+| Android | `ApexScrolling-v0.1.1-beta-universal.apk` / `-arm64-v8a.apk` / `-armeabi-v7a.apk` | 45.7 / 16.3 / 13.9 MB |
+| iOS | `ApexScrolling-v0.1.1-beta-unsigned.ipa`（Sideloadly 自签） | 6.5 MB |
 
 代码托管在私有仓库 https://github.com/x192038743-sudo/ApexScrolling ，
 推送到 `main` 会自动跑 macOS 构建并上传新 IPA。
