@@ -29,6 +29,16 @@ iOS（IPA）无法在 Windows 上编译，仓库已内置两条出包路径：Gi
 （`./tool/build_ipa.sh`），产出的未签名 IPA 可直接用 Sideloadly 安装。
 步骤见 [docs/iOS打包与Sideloadly.md](docs/iOS打包与Sideloadly.md)。
 
+当前已产出的测试版安装包（本地 `dist/`，不入库）：
+
+| 平台 | 文件 | 大小 |
+|---|---|---|
+| Android | `ApexScrolling-v0.1.0-beta-universal.apk` / `-arm64-v8a.apk` / `-armeabi-v7a.apk` | 45.7 / 16.3 / 13.9 MB |
+| iOS | `ApexScrolling-v0.1.0-beta-unsigned.ipa`（Sideloadly 自签） | 6.5 MB |
+
+代码托管在私有仓库 https://github.com/x192038743-sudo/ApexScrolling ，
+推送到 `main` 会自动跑 macOS 构建并上传新 IPA。
+
 > Android 已声明 `INTERNET` 权限；iOS 全部接口走 HTTPS，无需额外 ATS 例外。
 >
 > 若所在网络无法直连 `maven.google.com`，`android/gradle.properties` 里的

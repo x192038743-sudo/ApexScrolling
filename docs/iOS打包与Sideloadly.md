@@ -1,5 +1,30 @@
 # iOS 测试版打包（IPA）与 Sideloadly 安装
 
+## ✅ 已经产出的 IPA（可直接用）
+
+仓库已推送到 GitHub 并跑通了 macOS 构建，IPA 就在本机：
+
+| 项 | 值 |
+|---|---|
+| 文件 | `dist/ApexScrolling-v0.1.0-beta-unsigned.ipa`（6.53 MB） |
+| SHA256 | `0d814587b6aede8703e206ac5196a3e3642db1e2802a0de4621ff3ad0b92225d` |
+| 构建来源 | GitHub Actions `iOS 未签名 IPA` run [34592918588](https://github.com/x192038743-sudo/ApexScrolling/actions/runs/34592918588)（2m36s 全绿） |
+| 仓库 | https://github.com/x192038743-sudo/ApexScrolling （private） |
+
+产物已校验：`Payload/Runner.app` 结构完整，`Runner` 为 arm64 Mach-O，
+`Frameworks/App.framework/App`（AOT 后的 Dart 代码，5.6 MB）、
+`Frameworks/Flutter.framework/Flutter`（引擎，8.6 MB）、
+`Frameworks/shared_preferences_foundation.framework`（设置持久化）、
+`Assets.car`（图标）齐全；`Info.plist` 为
+`com.apexscrolling.apexScrolling / ApexScrolling / 0.1.0 (1) / MinimumOSVersion 13.0`。
+App 本体未签名（只有 Flutter 预编译框架带内嵌签名），正是 Sideloadly 需要的形态。
+
+> 以后改了代码只要 `git push`，工作流会自动重新出 IPA；
+> 版本号取 `pubspec.yaml` 的 `version:`，产物在 Actions 页面保留 30 天。
+> 想换 runner 镜像或 Flutter 版本，改 `.github/workflows/ios-unsigned-ipa.yml` 即可。
+
+---
+
 ## 0. 为什么不能在 Windows 上直接产出 IPA
 
 iOS 应用的编译链是 **Xcode 独占**的：`clang` 编译 Swift/Objective-C、`actool` 处理图标、
