@@ -2,7 +2,7 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)；`版本号+构建号` 对应 `pubspec.yaml` 的 `version`。
 
-## [0.1.1] - 2026-09-11
+## 0.1.1 - 2026-09-11
 
 ### 修复
 - **预取在 Provider 销毁后仍访问 `ref`**：`FeedController.loadMore` 会抛
@@ -23,7 +23,7 @@
 - Android 设备端验收用例通过；连续上滑 50 张压测 **47s（平均 0.95s/张，最慢 1.23s）**，
   六个内容源均在出卡。原始日志见 `docs/evidence/`。
 
-## [0.1.0] - 2026-09-11
+## 0.1.0 - 2026-09-11
 
 ### 新增
 - 六个内容源的纯文字信息流：冷门学术词条（Wikidata + 维基百科）、哲学观点（SEP）、
@@ -35,5 +35,4 @@
 - 设置：逐源开关、字号三档、深浅主题、词条冷门度（≤100 / ≤20）、清除缓存。
 - 可靠性：并发竞速出卡、失败换源重抽、单源连续失败熔断 60s、无网回落本地缓存。
 
-[0.1.1]: https://github.com/x192038743-sudo/ApexScrolling/releases/tag/v0.1.1
-[0.1.0]: https://github.com/x192038743-sudo/ApexScrolling/releases/tag/v0.1.0
+下载：[v0.1.1 测试版](https://github.com/x192038743-sudo/ApexScrolling/releases/tag/v0.1.1)
