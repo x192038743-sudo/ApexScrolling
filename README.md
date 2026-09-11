@@ -73,29 +73,32 @@ iOS（IPA）无法在 Windows 上编译，仓库已内置两条出包路径：Gi
 ## 目录结构
 
 ```
+android/ ios/                   # Flutter 双端工程（含自绘图标与启动底色）
 lib/
-  core/endpoints.dart          # 所有数据源地址、UA、超时/熔断策略
-  models/                      # TextCard / CardLink / AppSettings
+  core/endpoints.dart           # 所有数据源地址、UA、超时/熔断策略
+  core/app_info.dart            # 版本号与测试版标识
+  models/                       # TextCard / CardLink / AppSettings
   data/
-    net_client.dart            # HTTP 封装（UA、超时、编码、错误类型）
-    text_cleaner.dart          # HTML/wikitext → 纯文本、段落切分、300–600 字选段
-    feed_repository.dart       # 抽源、竞速、换源、熔断、离线兜底
-    card_cache.dart            # 卡片本地缓存（离线可读）
-    presets.dart               # 公版书单 / 作者 / 技能检索词
-    adapters/                  # 六个内容源适配器（统一 Future<TextCard>）
-  state/                       # Riverpod providers / 设置 / 信息流控制器
-  ui/
-    feed_page.dart             # PageView 信息流 + 顶部极简操作区
-    card_view.dart             # 卡片态 / 展开态、渐隐、滑到底透传切卡
-    settings_page.dart         # 源开关、字号、主题、冷门档位、缓存清理
-    theme.dart                 # 配色与衬线排版
-test/                          # 49 个测试（fixture 驱动，不依赖网络）
-tool/smoke.dart                # 真实网络冒烟脚本
-tool/make_icon.py              # 生成 Android/iOS 应用图标（Pillow）
-assets/branding/               # 图标源图（1024px，不参与打包）
-dist/                          # 测试版 APK 产物与校验值（不入库）
-docs/                          # 项目规划、数据源与合规说明
+    net_client.dart             # HTTP 封装（UA、超时、编码、错误类型）
+    text_cleaner.dart           # HTML/wikitext → 纯文本、段落切分、300–600 字选段
+    feed_repository.dart        # 抽源、竞速、换源、熔断、离线兜底
+    card_cache.dart             # 卡片本地缓存（离线可读）
+    presets.dart                # 公版书单 / 作者 / 实用技能检索词
+    adapters/                   # 六个内容源适配器（统一 Future<TextCard>）
+  state/                        # Riverpod providers / 设置 / 信息流控制器
+  ui/                           # 信息流页、卡片态与展开态、设置页、主题
+assets/branding/                # 图标源图（1024px，不参与打包）
+test/                           # 49 个单元 / Widget 测试（fixture 驱动，不依赖网络）
+integration_test/               # 真机验收与 50 张压测（需设备）
+tool/                           # smoke.dart 冒烟、make_icon.py 出图标、build_ipa.sh、probe_howto.dart
+docs/                           # 文档索引见 docs/README.md
+.github/workflows/              # ci.yml（检查+测试）、ios-unsigned-ipa.yml（出 IPA）
+dist/                           # 本地产物目录（不入库，二进制随 GitHub Release 分发）
+CHANGELOG.md                    # 版本变更
 ```
+
+文档：[docs/README.md](docs/README.md)（索引）· [CHANGELOG.md](CHANGELOG.md)（更新日志）·
+[Releases](https://github.com/x192038743-sudo/ApexScrolling/releases)（安装包下载）。
 
 ## 数据源与网络说明
 

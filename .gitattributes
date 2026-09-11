@@ -1,0 +1,20 @@
+# 统一换行：仓库内文本一律 LF，避免 Windows 下反复出现 CRLF 警告
+* text=auto eol=lf
+
+# 明确的二进制类型
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.jar binary
+*.zip binary
+*.apk binary
+*.ipa binary
+*.keystore binary
+*.ttf binary
+*.otf binary
+
+# 生成的/第三方内容，diff 噪音大
+pubspec.lock -diff
+ios/Runner.xcodeproj/project.pbxproj -diff
+*.pbxproj -diff
