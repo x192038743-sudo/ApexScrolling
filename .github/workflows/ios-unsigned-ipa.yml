@@ -1,0 +1,79 @@
+name: iOS 未签名 IPA
+
+# 用途：在没有 Mac 的情况下产出可交给 Sideloadly 签名的 IPA。
+# 触发方式：GitHub 网页手动运行，或推送到 main / master。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-ipa:
+    name: 构建 iOS 未签名 IPA
+    # macos-latest 会指向 GitHub 当前支持的 macOS 镜像，避免镜像退役导致工作流失效。
+    # 若某天 Flutter 与预装 Xcode 版本冲突，可改为 macos-14，或把下面的
+    # flutter-version 换成本仓库之外的新版本。
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Flutter（与开发机一致 3.35.3 stable）
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.3
+          channel: stable
+          cache: true
+
+      - name: 确保 CocoaPods 可用
+        run: |
+          if ! command -v pod >/dev/null 2>&1; then
+            sudo gem install cocoapods
+          fi
+          pod --version
+
+      - name: 拉取依赖
+        run: |
+          flutter --version
+          flutter pub get
+
+      - name: 构建 iOS（不签名）
+        run: flutter build ios --release --no-codesign
+
+      - name: 打成 IPA（Payload/Runner.app）
+        run: |
+          set -euo pipefail
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "找不到构建产物：$APP_PATH" >&2
+            exit 1
+          fi
+          rm -rf build/ipa_payload
+          mkdir -p build/ipa_payload/Payload
+          cp -R "$APP_PATH" build/ipa_payload/Payload/
+          (cd build/ipa_payload && zip -qry ../ApexScrolling-unsigned.ipa Payload)
+          ls -lh build/ApexScrolling-unsigned.ipa
+          shasum -a 256 build/ApexScrolling-unsigned.ipa
+
+      - name: 写入构建摘要
+        run: |
+          {
+            echo "## ApexScrolling iOS 测试版（未签名）"
+            echo ""
+            echo "- 版本：$(grep '^version:' pubspec.yaml | cut -d' ' -f2)"
+            echo "- Bundle ID：com.apexscrolling.apexScrolling"
+            echo "- 产物：\`build/ApexScrolling-unsigned.ipa\`"
+            echo "- SHA256：\`$(shasum -a 256 build/ApexScrolling-unsigned.ipa | cut -d' ' -f1)\`"
+            echo ""
+            echo "下载 artifact 解压后，用 Sideloadly 选择该 .ipa 即可安装（需用 Apple ID 签名）。"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 上传 IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApexScrolling-ipa
+          path: build/ApexScrolling-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30

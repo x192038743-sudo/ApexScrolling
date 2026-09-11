@@ -24,6 +24,11 @@ flutter build ios --release        # iOS（需 macOS + Xcode）
 
 产物路径：`build/app/outputs/flutter-apk/app-release.apk`。安装与验收清单见 [docs/测试版说明.md](docs/测试版说明.md)。
 
+iOS（IPA）无法在 Windows 上编译，仓库已内置两条出包路径：GitHub Actions
+（`.github/workflows/ios-unsigned-ipa.yml`，无需 Mac）与 macOS 本地脚本
+（`./tool/build_ipa.sh`），产出的未签名 IPA 可直接用 Sideloadly 安装。
+步骤见 [docs/iOS打包与Sideloadly.md](docs/iOS打包与Sideloadly.md)。
+
 > Android 已声明 `INTERNET` 权限；iOS 全部接口走 HTTPS，无需额外 ATS 例外。
 >
 > 若所在网络无法直连 `maven.google.com`，`android/gradle.properties` 里的
