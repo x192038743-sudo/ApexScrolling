@@ -1,5 +1,8 @@
 name: apex_scrolling
 description: "ApexScrolling — 替代短视频的纯文字信息流 App（测试版）"
+homepage: https://github.com/x192038743-sudo/ApexScrolling
+repository: https://github.com/x192038743-sudo/ApexScrolling
+issue_tracker: https://github.com/x192038743-sudo/ApexScrolling/issues
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

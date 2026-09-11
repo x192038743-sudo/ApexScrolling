@@ -2,6 +2,11 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)；`版本号+构建号` 对应 `pubspec.yaml` 的 `version`。
 
+## 未发布
+
+- 添加 MIT 许可证（`LICENSE`），仓库由私有转为公开。
+- `pubspec.yaml` 补充 `homepage` / `repository` / `issue_tracker` 元信息。
+
 ## 0.1.1 - 2026-09-11
 
 ### 修复
