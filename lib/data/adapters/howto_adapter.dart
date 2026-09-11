@@ -20,6 +20,10 @@ class HowToAdapter implements CardAdapter {
   final Random _rng;
   final MediaWikiClient _wikibooks;
 
+  /// 会话内最近出过的条目：避免短时间内重复刷到同一篇。
+  final List<String> _recentTitles = <String>[];
+  static const int _recentWindow = 12;
+
   @override
   CardKind get kind => CardKind.howTo;
 
@@ -120,14 +124,17 @@ class HowToAdapter implements CardAdapter {
     final List<({String title, String html, String text})> fallbacks =
         <({String title, String html, String text})>[];
 
-    for (final String query in queries.take(3)) {
+    for (final String query in queries.take(6)) {
       final List<String> titles = await _wikibooks.searchTitles(
         query,
         prefix: query.endsWith('/'),
       );
       final List<String> pool = List<String>.of(titles)..shuffle(_rng);
-      for (final String title in pool.take(3)) {
+      for (final String title in pool.take(4)) {
         if (!seenTitles.add(title)) continue;
+        // 只保留「能跟着做」的主题，过滤教科书式理论章节与赛事特刊。
+        if (!_isPracticalTitle(title)) continue;
+        if (_recentTitles.contains(title)) continue;
         final String html = await _wikibooks.fetchPageHtml(title);
         if (html.isEmpty) continue;
         // 同一份 HTML 既取正文也取编号步骤，避免重复请求。
@@ -137,7 +144,10 @@ class HowToAdapter implements CardAdapter {
         // 「能跟着做」的教程优先：有编号步骤直接成卡。
         if (steps.length >= 2) {
           final TextCard card = _wikibooksCard(title, text, steps);
-          if (card.body.length >= 100) return card;
+          if (card.body.length >= 100) {
+            _remember(title);
+            return card;
+          }
         }
         fallbacks.add((title: title, html: html, text: text));
       }
@@ -150,7 +160,25 @@ class HowToAdapter implements CardAdapter {
       pick.text,
       TextCleaner.extractOrderedListItems(pick.html),
     );
-    return card.body.length >= 100 ? card : null;
+    if (card.body.length < 100) return null;
+    _remember(pick.title);
+    return card;
+  }
+
+  void _remember(String title) {
+    _recentTitles
+      ..remove(title)
+      ..add(title);
+    while (_recentTitles.length > _recentWindow) {
+      _recentTitles.removeAt(0);
+    }
+  }
+
+  /// 根名是否属于「实用主题」白名单（食谱、急救、手工……）。
+  static bool _isPracticalTitle(String title) {
+    final String root = title.split('/').first.trim();
+    if (root.isEmpty) return false;
+    return practicalBookRoots.any(root.contains);
   }
 
   TextCard _wikibooksCard(String title, String text, List<String> steps) {

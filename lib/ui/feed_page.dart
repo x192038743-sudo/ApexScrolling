@@ -28,6 +28,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(feedControllerProvider.notifier).ensurePrefetch(0);
     });
     _hintTimer = Timer(const Duration(seconds: 5), () {

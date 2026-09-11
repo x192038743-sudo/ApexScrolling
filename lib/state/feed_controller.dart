@@ -47,10 +47,15 @@ class FeedController extends Notifier<FeedState> {
   final Set<String> _seenIds = <String>{};
   int _inFlight = 0;
 
-  FeedRepository get _repository => ref.read(feedRepositoryProvider);
+  /// 在 build() 里固定仓库引用：预取是异步的，可能在 Provider 已销毁后才返回，
+  /// 那时再访问 ref 会抛 UnmountedRefException（真机验收抓到的缺陷）。
+  late final FeedRepository _repository;
 
   @override
-  FeedState build() => const FeedState();
+  FeedState build() {
+    _repository = ref.watch(feedRepositoryProvider);
+    return const FeedState();
+  }
 
   /// 保证 index 之后至少有 [ahead] 张卡片。
   Future<void> ensurePrefetch(
@@ -58,6 +63,7 @@ class FeedController extends Notifier<FeedState> {
     int ahead = prefetchAhead,
     int maxLoads = 3,
   }) async {
+    if (!ref.mounted) return;
     final List<Future<bool>> pending = <Future<bool>>[];
     while (state.cards.length + pending.length <= index + ahead &&
         pending.length < maxLoads) {
@@ -69,12 +75,14 @@ class FeedController extends Notifier<FeedState> {
 
   /// 抓取一张新卡片并追加到信息流末尾。
   Future<bool> loadMore() async {
+    if (!ref.mounted) return false;
     if (_inFlight >= 3) return false;
     _inFlight++;
     state = state.copyWith(loading: true, clearMessage: true);
     try {
       for (var attempt = 0; attempt < 3; attempt++) {
         final FeedFetchResult result = await _repository.nextCard();
+        if (!ref.mounted) return false;
         if (_seenIds.add(result.card.id)) {
           state = state.copyWith(
             cards: <TextCard>[...state.cards, result.card],
@@ -89,6 +97,7 @@ class FeedController extends Notifier<FeedState> {
       state = state.copyWith(loading: false);
       return false;
     } on SourceException catch (error) {
+      if (!ref.mounted) return false;
       state = state.copyWith(
         loading: false,
         offline: true,
@@ -106,6 +115,7 @@ class FeedController extends Notifier<FeedState> {
     final TextCard parent = state.cards[index];
     try {
       final TextCard card = await _repository.digDeeper(parent, link);
+      if (!ref.mounted) return null;
       if (!_seenIds.add(card.id)) return null;
       final List<TextCard> cards = List<TextCard>.of(state.cards)
         ..insert(index + 1, card);
@@ -116,12 +126,14 @@ class FeedController extends Notifier<FeedState> {
       );
       return card;
     } on SourceException catch (error) {
+      if (!ref.mounted) return null;
       state = state.copyWith(message: '内链打开失败 · ${error.message}');
       return null;
     }
   }
 
   void clearMessage() {
+    if (!ref.mounted) return;
     if (state.message == null) return;
     state = state.copyWith(clearMessage: true);
   }

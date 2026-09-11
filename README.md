@@ -12,7 +12,12 @@ flutter test          # 49 个单测 + Widget 测试（全部离线，用 fixtur
 flutter run           # 连接真机/模拟器运行
 dart run tool/smoke.dart   # 可选：真实网络冒烟，输出 build/smoke_report.txt
 flutter test integration_test/beta_acceptance_test.dart -d <device>   # 真机端到端验收
+flutter test integration_test/feed_soak_test.dart -d <device>         # 连续上滑 50 张压测
 ```
+
+Android 端到端验收已在 API 30 模拟器（WHPX + `-gpu host`）跑通：
+验收用例全过、50 张压测 47s（平均 0.95s/张、六源均在出卡），
+原始日志见 `docs/evidence/`；过程中修掉了「预取在 Provider 销毁后仍访问 ref」的真实缺陷。
 
 构建（**当前测试版 APK 即由此产出**）：
 
