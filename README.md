@@ -1,3 +1,7 @@
+[![CI](https://github.com/x192038743-sudo/ApexScrolling/actions/workflows/ci.yml/badge.svg)](https://github.com/x192038743-sudo/ApexScrolling/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/x192038743-sudo/ApexScrolling?include_prereleases&label=release)](https://github.com/x192038743-sudo/ApexScrolling/releases)
+
 # ApexScrolling
 
 替代短视频的**纯文字信息流** App：上滑随机刷到一张极简文字卡片——学术冷门词条、哲学观点、经典选段、短篇小说/散文、实用技能教程、诗词名句。无账号、无后端、无算法推荐，全部内容由客户端直连公开开放资源。
@@ -98,7 +102,8 @@ CHANGELOG.md                    # 版本变更
 ```
 
 文档：[docs/README.md](docs/README.md)（索引）· [CHANGELOG.md](CHANGELOG.md)（更新日志）·
-[Releases](https://github.com/x192038743-sudo/ApexScrolling/releases)（安装包下载）。
+[Releases](https://github.com/x192038743-sudo/ApexScrolling/releases)（安装包下载）·
+[CONTRIBUTING.md](CONTRIBUTING.md)（贡献指南）。
 
 ## 数据源与网络说明
 
