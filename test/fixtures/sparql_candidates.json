@@ -1,0 +1,26 @@
+{
+  "head": { "vars": [ "item", "itemLabel", "count", "zhTitle", "enTitle" ] },
+  "results": {
+    "bindings": [
+      {
+        "item": { "type": "uri", "value": "http://www.wikidata.org/entity/Q26708" },
+        "itemLabel": { "xml:lang": "zh", "type": "literal", "value": "二项式定理" },
+        "count": { "datatype": "http://www.w3.org/2001/XMLSchema#integer", "type": "literal", "value": "76" },
+        "zhTitle": { "xml:lang": "zh", "type": "literal", "value": "二项式定理" },
+        "enTitle": { "xml:lang": "en", "type": "literal", "value": "Binomial theorem" }
+      },
+      {
+        "item": { "type": "uri", "value": "http://www.wikidata.org/entity/Q999999" },
+        "itemLabel": { "xml:lang": "zh", "type": "literal", "value": "热门词条" },
+        "count": { "datatype": "http://www.w3.org/2001/XMLSchema#integer", "type": "literal", "value": "220" },
+        "zhTitle": { "xml:lang": "zh", "type": "literal", "value": "热门词条" }
+      },
+      {
+        "item": { "type": "uri", "value": "http://www.wikidata.org/entity/Q4242" },
+        "itemLabel": { "xml:lang": "en", "type": "literal", "value": "Epistemic injustice" },
+        "count": { "datatype": "http://www.w3.org/2001/XMLSchema#integer", "type": "literal", "value": "18" },
+        "enTitle": { "xml:lang": "en", "type": "literal", "value": "Epistemic injustice" }
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "query": {
+    "search": [
+      { "ns": 0, "title": "食谱/番茄炒蛋", "pageid": 1001 },
+      { "ns": 0, "title": "食谱", "pageid": 1002 }
+    ]
+  }
+}

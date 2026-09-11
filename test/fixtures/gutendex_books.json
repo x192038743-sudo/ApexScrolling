@@ -1,0 +1,26 @@
+{
+  "count": 2,
+  "results": [
+    {
+      "id": 2680,
+      "title": "Meditations",
+      "authors": [ { "name": "Marcus Aurelius, Emperor of Rome" } ],
+      "languages": [ "en" ],
+      "formats": {
+        "text/html": "https://www.gutenberg.org/ebooks/2680.html.images",
+        "application/epub+zip": "https://www.gutenberg.org/ebooks/2680.epub.images",
+        "text/plain; charset=utf-8": "https://www.gutenberg.org/files/2680/2680-0.txt"
+      }
+    },
+    {
+      "id": 1998,
+      "title": "Thus Spoke Zarathustra",
+      "authors": [ { "name": "Nietzsche, Friedrich Wilhelm" } ],
+      "languages": [ "en" ],
+      "formats": {
+        "application/epub+zip": "https://www.gutenberg.org/ebooks/1998.epub.images",
+        "text/plain; charset=us-ascii": "https://www.gutenberg.org/files/1998/1998.txt"
+      }
+    }
+  ]
+}
