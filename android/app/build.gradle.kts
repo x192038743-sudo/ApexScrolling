@@ -8,7 +8,9 @@ plugins {
 android {
     namespace = "com.apexscrolling.apex_scrolling"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // 本工程没有原生代码（无 C/C++ 插件），显式不指定 NDK 版本，
+    // 避免构建时被迫下载 NDK + CMake（约 2GB）。
+    // 若后续引入含 native 代码的插件，请恢复：ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

@@ -8,19 +8,26 @@ Flutter 3.35（Android + iOS）· Riverpod · 全离线设置与缓存。
 
 ```bash
 flutter pub get
-flutter test          # 45 个单测 + Widget 测试（全部离线，用 fixture）
+flutter test          # 49 个单测 + Widget 测试（全部离线，用 fixture）
 flutter run           # 连接真机/模拟器运行
 dart run tool/smoke.dart   # 可选：真实网络冒烟，输出 build/smoke_report.txt
 ```
 
-构建：
+构建（**当前测试版 APK 即由此产出**）：
 
 ```bash
-flutter build apk --release        # Android
+flutter build apk --release                    # 通用 APK（含三种 ABI）
+flutter build apk --release --split-per-abi    # 按 ABI 拆分，体积更小
 flutter build ios --release        # iOS（需 macOS + Xcode）
 ```
 
+产物路径：`build/app/outputs/flutter-apk/app-release.apk`。安装与验收清单见 [docs/测试版说明.md](docs/测试版说明.md)。
+
 > Android 已声明 `INTERNET` 权限；iOS 全部接口走 HTTPS，无需额外 ATS 例外。
+>
+> 若所在网络无法直连 `maven.google.com`，`android/gradle.properties` 里的
+> `apex.cnMirrors=true`（默认）会让 Gradle 优先走华为云 / 腾讯云 / 阿里云镜像；
+> Flutter 引擎资源镜像可用 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn` 指定。
 
 ## 交互（核心体验）
 

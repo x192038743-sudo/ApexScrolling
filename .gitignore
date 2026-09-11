@@ -1,6 +1,8 @@
 # Miscellaneous
 *.class
 *.log
+# 打包产物（体积大，不入库；分发见 dist/SHA256SUMS.txt）
+/dist/
 *.pyc
 *.swp
 .DS_Store

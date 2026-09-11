@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/app_info.dart';
 import '../models/app_settings.dart';
 import '../models/text_card.dart';
 import '../state/providers.dart';
@@ -92,6 +93,11 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 28),
           _SectionTitle('关于', palette),
+          Text(
+            '${AppInfo.name} ${AppInfo.versionLabel}',
+            style: meta.copyWith(fontSize: 12.5, color: palette.text),
+          ),
+          const SizedBox(height: 8),
           Text(
             '· 无账号、无埋点、无自建服务器；所有内容来自公开开放资源。\n'
             '· 维基百科 / 维基文库 / 维基教科书：CC BY-SA 4.0\n'

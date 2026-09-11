@@ -1,4 +1,6 @@
 pluginManagement {
+    val useCnMirrors: Boolean =
+        (extra.properties["apex.cnMirrors"] ?: "true").toString().toBoolean()
     val flutterSdkPath =
         run {
             val properties = java.util.Properties()
@@ -11,6 +13,12 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
+        if (useCnMirrors) {
+            maven { url = uri("https://repo.huaweicloud.com/repository/maven/") }
+            maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+            maven { url = uri("https://maven.aliyun.com/repository/public") }
+        }
         google()
         mavenCentral()
         gradlePluginPortal()
