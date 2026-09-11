@@ -68,8 +68,11 @@ lib/
     card_view.dart             # 卡片态 / 展开态、渐隐、滑到底透传切卡
     settings_page.dart         # 源开关、字号、主题、冷门档位、缓存清理
     theme.dart                 # 配色与衬线排版
-test/                          # 45 个测试（fixture 驱动，不依赖网络）
+test/                          # 49 个测试（fixture 驱动，不依赖网络）
 tool/smoke.dart                # 真实网络冒烟脚本
+tool/make_icon.py              # 生成 Android/iOS 应用图标（Pillow）
+assets/branding/               # 图标源图（1024px，不参与打包）
+dist/                          # 测试版 APK 产物与校验值（不入库）
 docs/                          # 项目规划、数据源与合规说明
 ```
 
