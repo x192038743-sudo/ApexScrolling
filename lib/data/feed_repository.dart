@@ -98,6 +98,14 @@ class FeedRepository {
   SourceHealth healthOf(CardKind kind) =>
       _health.putIfAbsent(kind, SourceHealth.new);
 
+  /// 本次出卡是否走英文提供者：按设置的英文占比掷骰子。
+  bool _shouldUseEnglish() {
+    final int percent = _settings.englishPercent.clamp(0, 100);
+    if (percent <= 0) return false;
+    if (percent >= 100) return true;
+    return _rng.nextInt(100) < percent;
+  }
+
   /// 取下一张卡片。
   ///
   /// 策略：并发竞速抓取 2 个源，先成功者立即出卡，
@@ -178,7 +186,8 @@ class FeedRepository {
   Future<TextCard> _fetchFrom(CardKind kind) async {
     final CardAdapter adapter = _adapters[kind]!;
     try {
-      final TextCard card = await adapter.fetch();
+      final TextCard card =
+          await adapter.fetch(preferEnglish: _shouldUseEnglish());
       healthOf(kind).recordSuccess();
       await _cache.save(card);
       return card;

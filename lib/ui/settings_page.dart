@@ -72,6 +72,24 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 18),
           _Preview(settings: settings, palette: palette),
           const SizedBox(height: 20),
+          _SectionTitle('内容语言', palette),
+          _Label('英文内容占比 ${settings.englishPercent}%', palette),
+          Slider(
+            value: settings.englishPercent.toDouble(),
+            min: 0,
+            max: 100,
+            divisions: 10,
+            label: '${settings.englishPercent}%',
+            onChanged: (double value) =>
+                controller.setEnglishPercent(value.round()),
+          ),
+          Text(
+            settings.englishPercent == 0
+                ? '仅推送中文内容。'
+                : '哲学、词条、经典、小说和教程会按此比例优先提供英文内容。诗词保持中文。',
+            style: meta.copyWith(fontSize: 12, height: 1.7),
+          ),
+          const SizedBox(height: 20),
           _SectionTitle('词条冷门程度', palette),
           SegmentedButton<WikiRarity>(
             segments: <ButtonSegment<WikiRarity>>[

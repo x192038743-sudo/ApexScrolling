@@ -9,7 +9,10 @@ abstract class CardAdapter {
   String get displayName;
 
   /// 抓取一张卡片；失败时抛 [SourceException]。
-  Future<TextCard> fetch();
+  ///
+  /// [preferEnglish] 为 true 时优先给英文内容（SEP、古登堡、英文维基等）；
+  /// 没有英文提供者的源（如诗词）忽略该参数，始终返回中文。
+  Future<TextCard> fetch({bool preferEnglish = false});
 }
 
 /// 供测试与调试使用的简单来源标注。

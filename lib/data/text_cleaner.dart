@@ -392,6 +392,130 @@ class TextCleaner {
         .toList();
   }
 
+  // -------------------------------------------------------------- 内容质量
+
+  /// 判定一段文本是否只是「目录 / 索引 / 版本列表」而不是正文。
+  ///
+  /// 维基文库的《道德经》《论语》等页面、食谱里的菜系索引都属于这一类，
+  /// 直接成卡会显得毫无意义。只在古文经典 / 小说散文 / 技能教程 / 词条导语上
+  /// 使用；诗词（整首分行）不参与判定，避免误杀。
+  static bool looksLikeIndex(String text) {
+    final String normalized = normalizeWhitespace(text);
+    if (normalized.length < 40) return false;
+
+    final List<String> lines = normalized
+        .split('\n')
+        .map((String line) => line.trim())
+        .where((String line) => line.isNotEmpty)
+        .toList(growable: false);
+    if (lines.length < 4) return false;
+
+    final RegExp sentenceEnd = RegExp(r'[。！？；!?;]');
+    final int shortLines = lines
+        .where((String line) =>
+            line.length <= 25 && !sentenceEnd.hasMatch(line))
+        .length;
+    final double shortRatio = shortLines / lines.length;
+
+    final int sentenceCount = RegExp(r'[。！？]').allMatches(normalized).length;
+    final int bookTitleMarks = '《'.allMatches(normalized).length;
+    final double avgLineLength =
+        normalized.replaceAll('\n', '').length / lines.length;
+
+    // ① 绝大多数是"没有句末标点的短行" —— 典型目录。
+    if (lines.length >= 5 && shortRatio > 0.6) return true;
+    // ② 书名号成串出现且几乎没有完整句子 —— 书目 / 篇目列表。
+    if (bookTitleMarks >= 3 && sentenceCount < lines.length * 0.25) return true;
+    // ③ 行数多、行很短、几乎没有句子 —— 索引型排版。
+    if (lines.length >= 6 && avgLineLength < 30 && sentenceCount <= 2) {
+      return true;
+    }
+    return false;
+  }
+
+  /// 把整篇正文限制在 [maxChars] 以内，并保证结尾是完整段落。
+  ///
+  /// 「整篇」作品可能有好几万字（鲁迅《祝福》约 1.1 万字），不能无上限丢给
+  /// 渲染层。这里按自然段累积，截到上限前最后一个完整段落；单段过长时按句号切。
+  static String limitToWholeParagraphs(
+    String text, {
+    int maxChars = 15000,
+  }) {
+    final String normalized = normalizeWhitespace(text);
+    if (normalized.length <= maxChars) return normalized;
+
+    final List<String> paragraphs = splitParagraphs(normalized);
+    if (paragraphs.isEmpty) return _cutAtSentence(normalized, maxChars);
+
+    final StringBuffer buffer = StringBuffer();
+    for (final String paragraph in paragraphs) {
+      if (buffer.isEmpty) {
+        if (paragraph.length > maxChars) {
+          return _cutAtSentence(paragraph, maxChars);
+        }
+        buffer.write(paragraph);
+        continue;
+      }
+      if (buffer.length + 2 + paragraph.length > maxChars) break;
+      buffer
+        ..write('\n\n')
+        ..write(paragraph);
+    }
+    final String result = buffer.toString().trim();
+    return result.isEmpty ? _cutAtSentence(normalized, maxChars) : result;
+  }
+
+  /// 在 [maxChars] 内按最后一个句末标点收尾（找不到就硬截）。
+  static String _cutAtSentence(String text, int maxChars) {
+    final String head = text.substring(0, min(maxChars, text.length));
+    final int cut = _lastSentenceEnd(head);
+    return cut <= 0 ? head.trim() : head.substring(0, cut).trim();
+  }
+
+  static int _lastSentenceEnd(String text) {
+    final RegExp end = RegExp(r'[。！？；.!?;]');
+    var last = -1;
+    for (final RegExpMatch match in end.allMatches(text)) {
+      last = match.end;
+    }
+    return last;
+  }
+
+  /// 把整本书切成章节（英文 CHAPTER/PART/BOOK、中文 第 N 章/回/卷/節）。
+  ///
+  /// 古登堡的长篇不再随机切段，而是随机取**一整章**，保证内容完整。
+  static List<String> splitChapters(String text) {
+    final String normalized = normalizeWhitespace(text);
+    if (normalized.isEmpty) return const <String>[];
+
+    final RegExp heading = RegExp(
+      r'^\s*(chapter|part|book|section|canto)\b.*$'
+      r'|^\s*第\s*[0-9一二三四五六七八九十百零〇]+\s*[章回節节卷篇]\b.*$',
+      caseSensitive: false,
+    );
+
+    final List<String> chapters = <String>[];
+    final StringBuffer buffer = StringBuffer();
+    var seenHeading = false;
+    for (final String line in normalized.split('\n')) {
+      final bool isHeading = heading.hasMatch(line);
+      if (isHeading && seenHeading && buffer.toString().trim().length > 400) {
+        chapters.add(buffer.toString().trim());
+        buffer.clear();
+      }
+      if (isHeading) seenHeading = true;
+      buffer.writeln(line);
+    }
+    final String tail = buffer.toString().trim();
+    if (tail.isNotEmpty) chapters.add(tail);
+
+    // 没有章节标记（单篇/短篇集）时整篇返回。
+    if (chapters.length <= 1) return <String>[normalized];
+    final List<String> usable =
+        chapters.where((String c) => c.length >= 400).toList(growable: false);
+    return usable.isEmpty ? <String>[normalized] : usable;
+  }
+
   /// 容错的百分号解码：链接里出现非法转义时退回原串。
   static String _safeDecode(String value) {
     try {

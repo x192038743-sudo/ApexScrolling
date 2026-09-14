@@ -46,6 +46,13 @@ class SettingsController extends Notifier<AppSettings> {
   void setWikiRarity(WikiRarity rarity) =>
       _update(state.copyWith(wikiRarity: rarity));
 
+  /// 英文内容占比（0–100，按 10% 一档保存）。
+  void setEnglishPercent(int percent) {
+    final int clamped = percent.clamp(0, 100);
+    final int snapped = (clamped / 10).round() * 10;
+    _update(state.copyWith(englishPercent: snapped));
+  }
+
   void _update(AppSettings next) {
     state = next;
     _prefs.setString(storageKey, jsonEncode(next.toJson()));

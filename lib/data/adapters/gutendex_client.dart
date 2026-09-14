@@ -121,4 +121,27 @@ class GutendexClient {
     }
     return '佚名';
   }
+
+  /// 取「一个完整篇章」：优先随机选一整章；没有章节标记就整篇（按上限截断）。
+  ///
+  /// 目录型章节会被跳过，避免出现"整张卡都是目录"的无意义内容。
+  Future<String?> pickWholeChapter(
+    Map<String, dynamic> bookJson, {
+    int maxChars = 15000,
+    int minChars = 400,
+  }) async {
+    final String text = await fetchPlainText(bookJson);
+    if (text.length < minChars) return null;
+
+    final List<String> chapters = TextCleaner.splitChapters(text);
+    final List<String> pool = List<String>.of(chapters)..shuffle(_rng);
+    for (final String chapter in pool.take(4)) {
+      if (TextCleaner.looksLikeIndex(chapter)) continue;
+      final String body =
+          TextCleaner.limitToWholeParagraphs(chapter, maxChars: maxChars);
+      if (body.length < minChars) continue;
+      return body;
+    }
+    return null;
+  }
 }

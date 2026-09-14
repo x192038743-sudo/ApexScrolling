@@ -29,6 +29,7 @@ void main() {
     expect(settings.fontScaleLevel, 1);
     expect(settings.theme, AppThemeOption.system);
     expect(settings.wikiRarity, WikiRarity.loose);
+    expect(settings.englishPercent, 20);
     expect(settings.fontScale, 1.0);
   });
 
@@ -70,6 +71,21 @@ void main() {
     expect(settings.fontScale, AppSettings.fontScales[2]);
     expect(settings.theme, AppThemeOption.dark);
     expect(settings.wikiRarity.maxSitelinks, 20);
+  });
+
+  test('英文内容占比会限制范围并持久化', () {
+    final SettingsController controller =
+        container.read(settingsControllerProvider.notifier);
+    controller.setEnglishPercent(71);
+    expect(container.read(settingsControllerProvider).englishPercent, 70);
+
+    controller.setEnglishPercent(180);
+    expect(container.read(settingsControllerProvider).englishPercent, 100);
+
+    final Map<String, dynamic> stored = jsonDecode(
+      prefs.getString(SettingsController.storageKey)!,
+    ) as Map<String, dynamic>;
+    expect(stored['englishPercent'], 100);
   });
 
   test('重新读取时从本地恢复设置', () {

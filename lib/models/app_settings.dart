@@ -48,6 +48,7 @@ class AppSettings {
     this.fontScaleLevel = 1,
     this.theme = AppThemeOption.system,
     this.wikiRarity = WikiRarity.loose,
+    this.englishPercent = 20,
   });
 
   /// 已启用的内容源（设置中逐源开关）。
@@ -58,6 +59,16 @@ class AppSettings {
 
   final AppThemeOption theme;
   final WikiRarity wikiRarity;
+
+  /// 英文内容推送占比（0–100，步进 10，默认 20）。
+  ///
+  /// 每张卡片按该概率选择英文提供者；诗词源只有中文，因此实际英文占比
+  /// 约为设定值 × 5/6。
+  final int englishPercent;
+
+  /// 滑块档位（0,10,…,100）。
+  static const List<int> englishPercentStops =
+      <int>[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
   static const List<double> fontScales = <double>[0.9, 1.0, 1.14];
 
@@ -71,12 +82,14 @@ class AppSettings {
     int? fontScaleLevel,
     AppThemeOption? theme,
     WikiRarity? wikiRarity,
+    int? englishPercent,
   }) =>
       AppSettings(
         enabledSources: enabledSources ?? this.enabledSources,
         fontScaleLevel: fontScaleLevel ?? this.fontScaleLevel,
         theme: theme ?? this.theme,
         wikiRarity: wikiRarity ?? this.wikiRarity,
+        englishPercent: englishPercent ?? this.englishPercent,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -85,6 +98,7 @@ class AppSettings {
         'fontScaleLevel': fontScaleLevel,
         'theme': theme.id,
         'wikiRarity': wikiRarity.name,
+        'englishPercent': englishPercent,
       };
 
   static AppSettings fromJson(Map<String, dynamic> json) {
@@ -98,6 +112,8 @@ class AppSettings {
       fontScaleLevel: json['fontScaleLevel'] as int? ?? 1,
       theme: AppThemeOption.fromId(json['theme'] as String? ?? 'system'),
       wikiRarity: WikiRarity.fromId(json['wikiRarity'] as String? ?? 'loose'),
+      // 旧版本设置里没有这个字段，取默认 20%。
+      englishPercent: (json['englishPercent'] as int? ?? 20).clamp(0, 100),
     );
   }
 }

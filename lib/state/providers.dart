@@ -36,9 +36,12 @@ final Provider<FeedRepository> feedRepositoryProvider =
   final FeedRepository repository = FeedRepository(
     net: ref.watch(netClientProvider),
     cache: ref.watch(cardCacheProvider),
-    settings: ref.watch(settingsControllerProvider),
+    // 只取一次初值：设置变化通过下面的 listen 同步给同一个仓库实例。
+    // 若这里用 watch，改字号/主题/源开关都会让仓库失效 → FeedController
+    // 被重建 → 信息流卡片被清空，返回主页就是灰屏。
+    settings: ref.read(settingsControllerProvider),
   );
-  // 设置（源开关 / 冷门阈值）变化后同步到仓库。
+  // 设置（源开关 / 英文占比 / 冷门阈值）变化后同步到仓库，不重建仓库。
   ref.listen<AppSettings>(settingsControllerProvider,
       (AppSettings? previous, AppSettings next) {
     repository.updateSettings(next);

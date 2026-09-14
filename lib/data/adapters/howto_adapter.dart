@@ -31,11 +31,12 @@ class HowToAdapter implements CardAdapter {
   String get displayName => '实用技能教程';
 
   @override
-  Future<TextCard> fetch() async {
-    for (final String api in <String>[
-      Endpoints.wikihowZhApi,
-      Endpoints.wikihowEnApi,
-    ]) {
+  Future<TextCard> fetch({bool preferEnglish = false}) async {
+    // 英文占比开启时先试英文站；中文模式只用中文站，避免出英文卡片。
+    final List<String> wikiHowApis = preferEnglish
+        ? <String>[Endpoints.wikihowEnApi, Endpoints.wikihowZhApi]
+        : <String>[Endpoints.wikihowZhApi];
+    for (final String api in wikiHowApis) {
       try {
         final TextCard? card = await _fetchWikiHow(api);
         if (card != null) return card;
@@ -140,6 +141,7 @@ class HowToAdapter implements CardAdapter {
         // 同一份 HTML 既取正文也取编号步骤，避免重复请求。
         final String text = MediaWikiClient.cleanArticleHtml(html);
         if (text.length < 400) continue;
+        if (TextCleaner.looksLikeIndex(text)) continue;
         final List<String> steps = TextCleaner.extractOrderedListItems(html);
         // 「能跟着做」的教程优先：有编号步骤直接成卡。
         if (steps.length >= 2) {

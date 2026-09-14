@@ -23,6 +23,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   int _index = 0;
   bool _showHint = true;
   Timer? _hintTimer;
+  bool _recoveryScheduled = false;
 
   @override
   void initState() {
@@ -73,11 +74,30 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     );
   }
 
+  /// 卡片列表变短或清空时（设置变更、清缓存等）把分页拉回有效范围。
+  ///
+  /// 否则 PageView 的 itemCount 会小于 PageController 停留的页码，
+  /// 视口渲染不出任何一页，只剩底色 —— 也就是「灰屏」。
+  void _syncPageWithCards(FeedState state) {
+    final bool outOfRange =
+        state.cards.isEmpty || _index >= state.cards.length;
+    if (!outOfRange || _recoveryScheduled) return;
+    _recoveryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _recoveryScheduled = false;
+      if (!mounted) return;
+      if (_index != 0) setState(() => _index = 0);
+      if (_pageController.hasClients) _pageController.jumpToPage(0);
+      ref.read(feedControllerProvider.notifier).ensurePrefetch(0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final FeedState state = ref.watch(feedControllerProvider);
     final AppSettings settings = ref.watch(settingsControllerProvider);
     final AppPalette palette = AppPalette.of(context);
+    _syncPageWithCards(state);
 
     return Scaffold(
       backgroundColor: palette.background,

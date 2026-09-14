@@ -101,6 +101,25 @@ void main() {
     );
   });
 
+  testWidgets('英文内容占比可通过滑块调整', (WidgetTester tester) async {
+    useTallView(tester);
+    final ({Widget widget, ProviderContainer container}) harness =
+        await buildSettings();
+    addTearDown(harness.container.dispose);
+    await tester.pumpWidget(harness.widget);
+    await tester.pumpAndSettle();
+
+    final Finder slider = find.byType(Slider);
+    expect(slider, findsOneWidget);
+    await tester.drag(slider, const Offset(180, 0));
+    await tester.pumpAndSettle();
+
+    expect(
+      harness.container.read(settingsControllerProvider).englishPercent,
+      greaterThan(20),
+    );
+  });
+
   testWidgets('清除缓存卡片给出反馈', (WidgetTester tester) async {
     useTallView(tester);
     final ({Widget widget, ProviderContainer container}) harness =

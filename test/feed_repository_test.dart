@@ -26,7 +26,7 @@ class _FailingAdapter implements CardAdapter {
   int calls = 0;
 
   @override
-  Future<TextCard> fetch() async {
+  Future<TextCard> fetch({bool preferEnglish = false}) async {
     calls++;
     throw SourceException('模拟失败');
   }
@@ -45,7 +45,7 @@ class _OkAdapter implements CardAdapter {
   int calls = 0;
 
   @override
-  Future<TextCard> fetch() async {
+  Future<TextCard> fetch({bool preferEnglish = false}) async {
     calls++;
     return TextCard(
       id: '${kind.id}:$calls',
