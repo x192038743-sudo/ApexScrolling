@@ -53,13 +53,13 @@ void main() {
     expect(card.sourceUrl, contains('.wikipedia.org/wiki/'));
   });
 
-  test('严格档（≤20）跳过站点链接数超标的候选', () async {
+  test('英文模式下，严格档（≤20）跳过站点链接数超标的候选', () async {
     final WikiTermAdapter adapter = WikiTermAdapter(
       NetClient(client: buildClient()),
       const AppSettings(wikiRarity: WikiRarity.strict),
       random: Random(3),
     );
-    final TextCard card = await adapter.fetch();
+    final TextCard card = await adapter.fetch(preferEnglish: true);
     // 只有英文候选（18 个站点链接）满足严格阈值。
     expect(card.subtitle, '维基百科 · 英文');
   });
