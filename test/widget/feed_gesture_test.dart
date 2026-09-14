@@ -36,7 +36,7 @@ class _CannedAdapter implements CardAdapter {
   String get displayName => kind.label;
 
   @override
-  Future<TextCard> fetch() async {
+  Future<TextCard> fetch({bool preferEnglish = false}) async {
     calls++;
     return TextCard(
       id: '${kind.id}:$calls',

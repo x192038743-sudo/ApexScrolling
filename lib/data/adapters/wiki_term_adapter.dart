@@ -14,16 +14,13 @@ import 'wiki_source_client.dart';
 /// 这里只保留其余学术类目，避免两个源内容重叠。
 class WikiTermAdapter implements CardAdapter {
   WikiTermAdapter(
-    this._net,
+    NetClient net,
     this._settings, {
     Random? random,
     WikiSourceClient? wikiSource,
-  })  : _rng = random ?? Random(),
-        _wiki = wikiSource ?? WikiSourceClient(_net, random: random);
+  }) : _wiki = wikiSource ?? WikiSourceClient(net, random: random);
 
-  final NetClient _net;
   final AppSettings _settings;
-  final Random _rng;
   final WikiSourceClient _wiki;
 
   /// 学术领域类目：经 Wikidata 普查，均为「实例数足够 + 中文条目齐全」的类。

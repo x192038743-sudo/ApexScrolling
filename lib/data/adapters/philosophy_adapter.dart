@@ -4,7 +4,6 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 
 import '../../core/endpoints.dart';
-import '../../models/app_settings.dart';
 import '../../models/text_card.dart';
 import '../net_client.dart';
 import '../text_cleaner.dart';
