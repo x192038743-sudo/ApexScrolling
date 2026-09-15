@@ -133,7 +133,7 @@ void main() {
     await cache.save(
       TextCard(
         id: 'cached:1',
-        kind: CardKind.prose,
+        kind: CardKind.poetry,
         title: '缓存卡片',
         body: '离线可读的正文',
         attribution: '维基文库',
@@ -254,5 +254,23 @@ void main() {
     final FeedFetchResult result = await repository.nextCard();
     expect(result.fromCache, isTrue);
     expect(result.card.isEnglish, isFalse);
+  });
+
+  test('六个内容源轮换时不会被最快的诗词接口垄断', () async {
+    final Map<CardKind, CardAdapter> adapters = <CardKind, CardAdapter>{
+      for (final CardKind kind in CardKind.values)
+        kind: _OkAdapter(kind, kind.label),
+    };
+    final FeedRepository repository = buildRepository(
+      cache: await buildCache(),
+      settings: const AppSettings(),
+      adapters: adapters,
+    );
+
+    final List<CardKind> kinds = <CardKind>[];
+    for (var i = 0; i < CardKind.values.length; i++) {
+      kinds.add((await repository.nextCard()).card.kind);
+    }
+    expect(kinds.toSet(), hasLength(CardKind.values.length));
   });
 }

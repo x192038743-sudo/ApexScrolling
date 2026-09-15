@@ -73,6 +73,9 @@ class HowToAdapter implements CardAdapter {
     final String title = first['title']?.toString() ?? '';
     final String pageId = first['id']?.toString() ?? '';
     if (title.isEmpty || pageId.isEmpty) return null;
+    // wikiHow 的 random API 在部分网络节点会重复返回同一页，
+    // 这里和维基教科书路径共用最近标题窗口，避免信息流循环。
+    if (_recentTitles.contains(title)) return null;
 
     final Uri contentUri = Uri.parse(apiUrl).replace(
       queryParameters: <String, String>{
@@ -102,6 +105,7 @@ class HowToAdapter implements CardAdapter {
     final String intro = _parseWikiHowIntro(wikitext);
     if (steps.isEmpty && intro.length < 120) return null;
     final bool chinese = apiUrl.contains('zh.');
+    _remember(title);
     return TextCard(
       id: 'howto:wikihow:$pageId',
       kind: kind,

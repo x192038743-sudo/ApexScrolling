@@ -112,7 +112,19 @@ void main() {
       await tester.fling(find.byType(PageView), const Offset(0, -420), 1400);
       await settle(tester, frames: 10);
     }
-    expect(find.text('卡片 3'), findsOneWidget, reason: '应已滑到第 3 张');
+    final PageController pageController = tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!;
+    final int currentIndex = pageController.page!.round();
+    final String currentId = h.container
+        .read(feedControllerProvider)
+        .cards[currentIndex]
+        .id;
+    expect(
+      find.byKey(ValueKey<String>(currentId)),
+      findsOneWidget,
+      reason: '应已滑到第 3 张',
+    );
     final int cardsBefore = h.container
         .read(feedControllerProvider)
         .cards
@@ -138,7 +150,11 @@ void main() {
       reason: '改字号不应重建控制器导致卡片被清空',
     );
     expect(find.byType(TextCardView), findsWidgets, reason: '改字号后应仍有卡片在渲染');
-    expect(find.text('卡片 3'), findsOneWidget, reason: '应仍停在第 3 张卡');
+    expect(
+      find.byKey(ValueKey<String>(currentId)),
+      findsOneWidget,
+      reason: '应仍停在第 3 张卡',
+    );
 
     // ---- 2) 切主题 ----
     await tester.tap(find.byIcon(Icons.tune_rounded));
@@ -152,7 +168,7 @@ void main() {
       cardsBefore,
       reason: '切主题不应清空信息流',
     );
-    expect(find.text('卡片 3'), findsOneWidget);
+    expect(find.byKey(ValueKey<String>(currentId)), findsOneWidget);
 
     // ---- 3) 切源开关（关掉一个源）----
     await tester.tap(find.byIcon(Icons.tune_rounded));
@@ -170,6 +186,6 @@ void main() {
       cardsBefore,
       reason: '关闭一个内容源不应清空已有卡片',
     );
-    expect(find.text('卡片 3'), findsOneWidget);
+    expect(find.byKey(ValueKey<String>(currentId)), findsOneWidget);
   });
 }

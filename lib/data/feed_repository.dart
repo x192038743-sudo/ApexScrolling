@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import '../core/endpoints.dart';
@@ -77,7 +76,16 @@ class FeedRepository {
   final Random _rng;
   late final Map<CardKind, CardAdapter> _adapters;
   final Map<CardKind, SourceHealth> _health = <CardKind, SourceHealth>{};
-  final List<TextCard> _ready = <TextCard>[];
+
+  /// 待轮换的内容源。不能只按接口响应速度抢卡，否则响应很快的诗词接口
+  /// 会把维基百科、古登堡等较慢但重要的内容源长期压住。
+  final List<CardKind> _sourceQueue = <CardKind>[];
+
+  /// 本次运行已经展示过的卡片 ID，避免接口或离线缓存重复返回同一张卡。
+  final List<String> _recentCardIds = <String>[];
+  static const int _recentCardWindow = 240;
+
+  int _settingsGeneration = 0;
 
   AppSettings _settings;
 
@@ -88,8 +96,15 @@ class FeedRepository {
     final bool rarityChanged = settings.wikiRarity != _settings.wikiRarity;
     final bool languageChanged =
         settings.englishPercent != _settings.englishPercent;
+    final bool sourcesChanged = !_sameSet(
+      settings.enabledSources,
+      _settings.enabledSources,
+    );
     _settings = settings;
-    if (languageChanged) _ready.clear();
+    if (languageChanged || sourcesChanged || rarityChanged) {
+      _settingsGeneration++;
+      _sourceQueue.clear();
+    }
     if (!rarityChanged) return;
     final CardAdapter? existing = _adapters[CardKind.wikiTerm];
     if (existing is WikiTermAdapter || existing == null) {
@@ -114,12 +129,9 @@ class FeedRepository {
 
   /// 取下一张卡片。
   ///
-  /// 策略：并发竞速抓取 2 个源，先成功者立即出卡，
-  /// 后成功的结果进入就绪队列（下一次秒出），全部失败则回落离线缓存。
+  /// 策略：按轮换队列公平选择内容源，失败再换源；不再让响应最快的
+  /// 接口（通常是诗词）长期垄断信息流。全部失败则回落离线缓存。
   Future<FeedFetchResult> nextCard({int attempts = 2}) async {
-    if (_ready.isNotEmpty) {
-      return FeedFetchResult(card: _ready.removeAt(0), fromCache: false);
-    }
     final List<CardKind> enabled = _settings.enabledSources.toList();
     if (enabled.isEmpty) {
       throw SourceException('已关闭全部内容源');
@@ -129,63 +141,76 @@ class FeedRepository {
         .toList();
     // 全部熔断时也允许兜底试一次，避免长时间无内容。
     final List<CardKind> pool = available.isEmpty ? enabled : available;
-    pool.shuffle(_rng);
-
+    final int generation = _settingsGeneration;
     final List<String> errors = <String>[];
-    final List<Future<TextCard>> racing = <Future<TextCard>>[
-      for (final CardKind kind in pool.take(attempts))
-        if (_adapters[kind] != null) _fetchFrom(kind),
-    ];
-    final TextCard? card = racing.isEmpty ? null : await _race(racing, errors);
-    if (card != null) {
-      return FeedFetchResult(card: card, fromCache: false, errors: errors);
+    final int sourceAttempts = max(1, min(attempts, pool.length));
+    for (var sourceTry = 0; sourceTry < sourceAttempts; sourceTry++) {
+      final List<CardKind> next = _takeSources(pool, 1);
+      if (next.isEmpty) break;
+      final CardKind kind = next.first;
+      if (_adapters[kind] == null) continue;
+      try {
+        final TextCard card = await _fetchFrom(kind);
+        // 设置在请求期间改变时，丢弃旧语言/旧源结果，避免旧请求回流。
+        if (generation != _settingsGeneration ||
+            !_settings.enabledSources.contains(card.kind)) {
+          continue;
+        }
+        if (_recentCardIds.contains(card.id)) {
+          errors.add('${kind.label}: 重复卡片');
+          continue;
+        }
+        _rememberCard(card.id);
+        return FeedFetchResult(card: card, fromCache: false, errors: errors);
+      } on SourceException catch (error) {
+        errors.add(error.message);
+      }
     }
 
-    // 三源皆失败：退回离线缓存。
+    // 所有候选源失败：退回离线缓存，只取当前启用且未展示过的卡片。
     final TextCard? cached = _cache.randomCard(
-      where: _settings.englishPercent == 0
-          ? (TextCard card) => !card.isEnglish
-          : null,
+      where: (TextCard card) =>
+          _settings.enabledSources.contains(card.kind) &&
+          !_recentCardIds.contains(card.id) &&
+          (_settings.englishPercent != 0 || !card.isEnglish),
     );
     if (cached != null) {
+      _rememberCard(cached.id);
       return FeedFetchResult(card: cached, fromCache: true, errors: errors);
     }
     throw SourceException(errors.isEmpty ? '网络不可用' : errors.first);
   }
 
-  /// 竞速：首个成功的卡片优先返回，其余成功结果暂存待用。
-  Future<TextCard?> _race(
-    List<Future<TextCard>> futures,
-    List<String> errors,
-  ) async {
-    final Completer<TextCard?> completer = Completer<TextCard?>();
-    var pending = futures.length;
-    for (final Future<TextCard> future in futures) {
-      future.then(
-        (TextCard card) {
-          if (completer.isCompleted) {
-            _stash(card);
-          } else {
-            completer.complete(card);
-          }
-        },
-        onError: (Object error, StackTrace stackTrace) {
-          errors.add('$error');
-          pending--;
-          if (pending == 0 && !completer.isCompleted) {
-            completer.complete(null);
-          }
-        },
-      );
+  /// 从轮换队列取出本次要尝试的源；每轮会覆盖所有启用源一次。
+  List<CardKind> _takeSources(List<CardKind> pool, int count) {
+    final Set<CardKind> allowed = pool.toSet();
+    _sourceQueue.removeWhere((CardKind kind) => !allowed.contains(kind));
+    while (_sourceQueue.length < count) {
+      final List<CardKind> refill = allowed
+          .where((CardKind kind) => !_sourceQueue.contains(kind))
+          .toList();
+      if (refill.isEmpty) break;
+      refill.shuffle(_rng);
+      _sourceQueue.addAll(refill);
     }
-    return completer.future;
+    final int take = min(count, _sourceQueue.length);
+    final List<CardKind> selected = _sourceQueue.sublist(0, take);
+    _sourceQueue.removeRange(0, take);
+    return selected;
   }
 
-  /// 预取结果暂存（最多 3 张，避免无界增长）。
-  void _stash(TextCard card) {
-    if (_ready.length >= 3) return;
-    if (_ready.any((TextCard item) => item.id == card.id)) return;
-    _ready.add(card);
+  void _rememberCard(String id) {
+    _recentCardIds
+      ..remove(id)
+      ..add(id);
+    while (_recentCardIds.length > _recentCardWindow) {
+      _recentCardIds.removeAt(0);
+    }
+  }
+
+  static bool _sameSet(Set<CardKind> a, Set<CardKind> b) {
+    if (a.length != b.length) return false;
+    return a.every(b.contains);
   }
 
   Future<TextCard> _fetchFrom(CardKind kind) async {

@@ -12,7 +12,7 @@ Flutter 3.35（Android + iOS）· Riverpod · 全离线设置与缓存。
 
 ```bash
 flutter pub get
-flutter test          # 49 个单测 + Widget 测试（全部离线，用 fixture）
+flutter test          # 单测 + Widget 测试（全部离线，用 fixture）
 flutter run           # 连接真机/模拟器运行
 dart run tool/smoke.dart   # 可选：真实网络冒烟，输出 build/smoke_report.txt
 flutter test integration_test/beta_acceptance_test.dart -d <device>   # 真机端到端验收
@@ -68,9 +68,9 @@ iOS（IPA）无法在 Windows 上编译，仓库已内置两条出包路径：Gi
 
 ## 已实现能力
 
-- **六源信息流**：等权随机抽源、逐源开关、预取后 3 张、已看可回滑。
+- **六源信息流**：随机轮换队列公平抽源、逐源开关、预取后 3 张、已看可回滑。
 - **自适应抓取**：单源失败自动换源重抽；同一源连续失败 2 次熔断 60 秒；全部失败回落本地缓存卡片并提示。
-- **首卡竞速**：每次并发抓 2 个源，先成功者立刻出卡，后成功者进入就绪队列（下一张秒出）；词条源的 SPARQL 候选池一次取 12 条复用，避免连续等 10s+。
+- **完整诗词**：随包携带多套维基文库诗词选集，网络不可用时仍可阅读多行正文；今日诗词 API 作为兜底。词条源的 SPARQL 候选池一次取 12 条复用，避免连续等 10s+。
 - **阅读排版**：衬线字体（英文 Georgia，中文思源宋体/霞鹜文楷回退链）、行距 1.8、字号三档、深浅主题（跟随系统或手动）。
 - **内容语言**：可在设置中按 10% 档位设定英文内容占比；哲学、词条、经典、小说与教程优先提供对应语言，诗词始终为中文。
 - **隐私**：无账号、无埋点、无自建服务器；设置与卡片缓存仅存本机 `SharedPreferences`。
@@ -86,7 +86,7 @@ lib/
   data/
     net_client.dart             # HTTP 封装（UA、超时、编码、错误类型）
     text_cleaner.dart           # HTML/wikitext → 纯文本、段落切分、300–600 字选段
-    feed_repository.dart        # 抽源、竞速、换源、熔断、离线兜底
+    feed_repository.dart        # 公平抽源、换源、熔断、去重、离线兜底
     card_cache.dart             # 卡片本地缓存（离线可读）
     presets.dart                # 公版书单 / 作者 / 实用技能检索词
     adapters/                   # 六个内容源适配器（统一 Future<TextCard>）

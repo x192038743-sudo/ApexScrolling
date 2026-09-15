@@ -163,7 +163,7 @@ class SettingsPage extends ConsumerWidget {
       case CardKind.howTo:
         return 'wikiHow 步骤卡（不可达时用维基教科书）';
       case CardKind.poetry:
-        return '今日诗词 · 诗句与出处';
+        return '维基文库诗词选集 · 今日诗词网络兜底 · 完整分行正文';
     }
   }
 }
