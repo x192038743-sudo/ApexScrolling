@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 import '../models/app_settings.dart';
 import '../models/text_card.dart';
@@ -19,7 +20,9 @@ class TextCardView extends StatefulWidget {
     required this.isCurrent,
     required this.settings,
     required this.onNext,
+    required this.onPrevious,
     required this.onOpenLink,
+    required this.onTranslateWord,
   });
 
   final TextCard card;
@@ -30,9 +33,13 @@ class TextCardView extends StatefulWidget {
 
   /// 展开态滚到底后继续上滑 → 下一张。
   final VoidCallback onNext;
+  final VoidCallback onPrevious;
 
   /// 词条内链（兔子洞）。
   final ValueChanged<CardLink> onOpenLink;
+
+  /// 双击展开态英文单词后的翻译请求。
+  final Future<String> Function(String word) onTranslateWord;
 
   @override
   State<TextCardView> createState() => _TextCardViewState();
@@ -45,10 +52,19 @@ class _TextCardViewState extends State<TextCardView> {
   bool _expanded = false;
   double _overscroll = 0;
   final ScrollController _scrollController = ScrollController();
+  final List<DoubleTapGestureRecognizer> _wordRecognizers =
+      <DoubleTapGestureRecognizer>[];
+  String? _translationWord;
+  String? _translation;
+  String? _translationError;
+  bool _translationLoading = false;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    for (final DoubleTapGestureRecognizer recognizer in _wordRecognizers) {
+      recognizer.dispose();
+    }
     super.dispose();
   }
 
@@ -76,6 +92,32 @@ class _TextCardViewState extends State<TextCardView> {
         _scrollController.jumpTo(0);
       }
     });
+  }
+
+  Future<void> _translate(String word) async {
+    setState(() {
+      _translationWord = word;
+      _translation = null;
+      _translationError = null;
+      _translationLoading = true;
+    });
+    try {
+      final String result = await widget.onTranslateWord(word);
+      if (!mounted || _translationWord != word) return;
+      setState(() {
+        _translation = result;
+        _translationLoading = false;
+      });
+    } catch (error) {
+      if (!mounted || _translationWord != word) return;
+      setState(() {
+        _translationError = '$error'.replaceFirst(
+          RegExp(r'^SourceException\([^)]*\): '),
+          '',
+        );
+        _translationLoading = false;
+      });
+    }
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
@@ -118,6 +160,12 @@ class _TextCardViewState extends State<TextCardView> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: _toggleExpanded,
+      onVerticalDragEnd: (DragEndDetails details) {
+        if (_expanded) return;
+        final double velocity = details.primaryVelocity ?? 0;
+        if (velocity < -250) widget.onNext();
+        if (velocity > 250) widget.onPrevious();
+      },
       child: Stack(
         children: <Widget>[
           Positioned.fill(
@@ -145,7 +193,12 @@ class _TextCardViewState extends State<TextCardView> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(26, 0, 26, 92),
                     child: _expanded
-                        ? _buildExpandedBody(bodyStyle, metaStyle, palette, scale)
+                        ? _buildExpandedBody(
+                            bodyStyle,
+                            metaStyle,
+                            palette,
+                            scale,
+                          )
                         : FadingBody(
                             text: widget.card.fullText,
                             style: bodyStyle,
@@ -166,6 +219,24 @@ class _TextCardViewState extends State<TextCardView> {
               palette: palette,
             ),
           ),
+          if (_translationWord != null)
+            Positioned(
+              left: 26,
+              right: 26,
+              bottom: 102,
+              child: _TranslationBubble(
+                word: _translationWord!,
+                result: _translation,
+                loading: _translationLoading,
+                error: _translationError,
+                palette: palette,
+                onClose: () => setState(() {
+                  _translationWord = null;
+                  _translation = null;
+                  _translationError = null;
+                }),
+              ),
+            ),
         ],
       ),
     );
@@ -177,8 +248,9 @@ class _TextCardViewState extends State<TextCardView> {
     AppPalette palette,
     double scale,
   ) {
-    final List<CardLink> links =
-        widget.card.canDigDeeper ? widget.card.links : const <CardLink>[];
+    final List<CardLink> links = widget.card.canDigDeeper
+        ? widget.card.links
+        : const <CardLink>[];
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
       child: SingleChildScrollView(
@@ -189,7 +261,7 @@ class _TextCardViewState extends State<TextCardView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(widget.card.fullText, style: bodyStyle),
+            _buildTranslatableText(widget.card.fullText, bodyStyle),
             if (links.isNotEmpty) ...<Widget>[
               const SizedBox(height: 24),
               Text(
@@ -221,6 +293,77 @@ class _TextCardViewState extends State<TextCardView> {
       ),
     );
   }
+
+  Widget _buildTranslatableText(String text, TextStyle style) {
+    for (final DoubleTapGestureRecognizer recognizer in _wordRecognizers) {
+      recognizer.dispose();
+    }
+    _wordRecognizers.clear();
+    final RegExp tokenRe = RegExp(r"[A-Za-z][A-Za-z'’\-]*|[^A-Za-z]+");
+    final List<TextSpan> spans = <TextSpan>[];
+    for (final RegExpMatch match in tokenRe.allMatches(text)) {
+      final String token = match.group(0)!;
+      if (!RegExp(r'^[A-Za-z]').hasMatch(token)) {
+        spans.add(TextSpan(text: token, style: style));
+        continue;
+      }
+      final DoubleTapGestureRecognizer recognizer = DoubleTapGestureRecognizer()
+        ..onDoubleTap = () => _translate(token);
+      _wordRecognizers.add(recognizer);
+      spans.add(TextSpan(text: token, style: style, recognizer: recognizer));
+    }
+    return RichText(text: TextSpan(children: spans));
+  }
+}
+
+class _TranslationBubble extends StatelessWidget {
+  const _TranslationBubble({
+    required this.word,
+    required this.result,
+    required this.loading,
+    required this.error,
+    required this.palette,
+    required this.onClose,
+  });
+
+  final String word;
+  final String? result;
+  final bool loading;
+  final String? error;
+  final AppPalette palette;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: palette.surface.withValues(alpha: 0.97),
+    borderRadius: BorderRadius.circular(12),
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              loading
+                  ? '$word  ·  翻译中…'
+                  : error != null
+                  ? '$word  ·  $error'
+                  : '$word  →  ${result ?? ''}',
+              style: AppTextStyles.meta(
+                1,
+                palette,
+              ).copyWith(color: palette.text, height: 1.5),
+            ),
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: Icon(Icons.close, size: 16, color: palette.muted),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// 固定在卡片底部渐变区内的来源署名；不响应展开/收起点击。

@@ -55,7 +55,8 @@ Future<void> settle(WidgetTester tester, {int frames = 8}) async {
   }
 }
 
-Future<({ProviderContainer container, FeedRepository repository})> harness() async {
+Future<({ProviderContainer container, FeedRepository repository})>
+harness() async {
   SharedPreferences.setMockInitialValues(<String, Object>{});
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final FeedRepository repository = FeedRepository(
@@ -97,9 +98,11 @@ void main() {
         child: const MaterialApp(home: FeedPage()),
       ),
     );
-    for (var i = 0;
-        i < 30 && h.container.read(feedControllerProvider).cards.isEmpty;
-        i++) {
+    for (
+      var i = 0;
+      i < 30 && h.container.read(feedControllerProvider).cards.isEmpty;
+      i++
+    ) {
       await settle(tester, frames: 2);
     }
     await settle(tester);
@@ -110,7 +113,10 @@ void main() {
       await settle(tester, frames: 10);
     }
     expect(find.text('卡片 3'), findsOneWidget, reason: '应已滑到第 3 张');
-    final int cardsBefore = h.container.read(feedControllerProvider).cards.length;
+    final int cardsBefore = h.container
+        .read(feedControllerProvider)
+        .cards
+        .length;
     expect(cardsBefore, greaterThanOrEqualTo(3));
 
     // ---- 1) 改字号（用户报告的灰屏场景）----

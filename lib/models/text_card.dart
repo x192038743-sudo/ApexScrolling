@@ -37,14 +37,17 @@ class CardLink {
   /// 目标语言版本。
   final String lang;
 
-  Map<String, dynamic> toJson() =>
-      <String, dynamic>{'label': label, 'title': title, 'lang': lang};
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'label': label,
+    'title': title,
+    'lang': lang,
+  };
 
   static CardLink fromJson(Map<String, dynamic> json) => CardLink(
-        label: json['label'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        lang: json['lang'] as String? ?? 'zh',
-      );
+    label: json['label'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    lang: json['lang'] as String? ?? 'zh',
+  );
 }
 
 /// 信息流中的一张纯文字卡片。
@@ -97,6 +100,13 @@ class TextCard {
 
   bool get canDigDeeper => depth < maxDepth && links.isNotEmpty;
 
+  /// 内容提供者明确标注的英文卡片，用于语言设置切换时清理队列。
+  bool get isEnglish =>
+      id.contains(':en:') ||
+      (subtitle?.contains('英文') ?? false) ||
+      (subtitle?.contains('English') ?? false) ||
+      (subtitle?.contains('Stanford Encyclopedia') ?? false);
+
   /// 展开态渲染的完整正文（步骤卡合成编号步骤）。
   String get fullText {
     if (steps.isEmpty) return body;
@@ -109,39 +119,39 @@ class TextCard {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'kind': kind.id,
-        'title': title,
-        'subtitle': subtitle,
-        'body': body,
-        'steps': steps,
-        'attribution': attribution,
-        'sourceUrl': sourceUrl,
-        'links': links.map((CardLink l) => l.toJson()).toList(),
-        'depth': depth,
-        'fetchedAt': fetchedAt.toIso8601String(),
-      };
+    'id': id,
+    'kind': kind.id,
+    'title': title,
+    'subtitle': subtitle,
+    'body': body,
+    'steps': steps,
+    'attribution': attribution,
+    'sourceUrl': sourceUrl,
+    'links': links.map((CardLink l) => l.toJson()).toList(),
+    'depth': depth,
+    'fetchedAt': fetchedAt.toIso8601String(),
+  };
 
   static TextCard fromJson(Map<String, dynamic> json) => TextCard(
-        id: json['id'] as String? ?? '',
-        kind: CardKind.fromId(json['kind'] as String? ?? 'wikiTerm'),
-        title: json['title'] as String? ?? '',
-        subtitle: json['subtitle'] as String?,
-        body: json['body'] as String? ?? '',
-        steps: (json['steps'] as List<dynamic>? ?? <dynamic>[])
-            .map((dynamic e) => e.toString())
-            .toList(),
-        attribution: json['attribution'] as String? ?? '',
-        sourceUrl: json['sourceUrl'] as String?,
-        links: (json['links'] as List<dynamic>? ?? <dynamic>[])
-            .whereType<Map<String, dynamic>>()
-            .map(CardLink.fromJson)
-            .toList(),
-        depth: json['depth'] as int? ?? 0,
-        fetchedAt:
-            DateTime.tryParse(json['fetchedAt'] as String? ?? '') ??
-                DateTime.fromMillisecondsSinceEpoch(0),
-      );
+    id: json['id'] as String? ?? '',
+    kind: CardKind.fromId(json['kind'] as String? ?? 'wikiTerm'),
+    title: json['title'] as String? ?? '',
+    subtitle: json['subtitle'] as String?,
+    body: json['body'] as String? ?? '',
+    steps: (json['steps'] as List<dynamic>? ?? <dynamic>[])
+        .map((dynamic e) => e.toString())
+        .toList(),
+    attribution: json['attribution'] as String? ?? '',
+    sourceUrl: json['sourceUrl'] as String?,
+    links: (json['links'] as List<dynamic>? ?? <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(CardLink.fromJson)
+        .toList(),
+    depth: json['depth'] as int? ?? 0,
+    fetchedAt:
+        DateTime.tryParse(json['fetchedAt'] as String? ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0),
+  );
 
   String encode() => jsonEncode(toJson());
 

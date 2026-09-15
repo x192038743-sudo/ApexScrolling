@@ -17,8 +17,9 @@ class PoetryAdapter implements CardAdapter {
 
   @override
   Future<TextCard> fetch({bool preferEnglish = false}) async {
-    final Map<String, dynamic> json =
-        await _net.getJson(Uri.parse(Endpoints.jinrishiciApi));
+    final Map<String, dynamic> json = await _net.getJson(
+      Uri.parse(Endpoints.jinrishiciApi),
+    );
     final String content = (json['content'] ?? '').toString().trim();
     if (content.isEmpty) {
       throw SourceException('今日诗词返回空内容');

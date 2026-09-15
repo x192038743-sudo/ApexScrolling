@@ -14,14 +14,11 @@ import 'wiki_source_client.dart';
 /// - 中文：维基百科哲学类冷门词条（哲学概念 / 哲学立场 / 悖论 / 思想实验）；
 /// - 英文：斯坦福哲学百科（SEP）条目导语。
 ///
-/// 具体走哪个由英文占比决定（`preferEnglish`），首选失败会自动退回另一个。
+/// 具体走哪个由英文占比决定（`preferEnglish`）；英文模式失败时才退回中文。
 class PhilosophyAdapter implements CardAdapter {
-  PhilosophyAdapter(
-    this._net, {
-    Random? random,
-    WikiSourceClient? wikiSource,
-  })  : _rng = random ?? Random(),
-        _wiki = wikiSource ?? WikiSourceClient(_net, random: random);
+  PhilosophyAdapter(this._net, {Random? random, WikiSourceClient? wikiSource})
+    : _rng = random ?? Random(),
+      _wiki = wikiSource ?? WikiSourceClient(_net, random: random);
 
   final NetClient _net;
   final Random _rng;
@@ -48,8 +45,9 @@ class PhilosophyAdapter implements CardAdapter {
 
   @override
   Future<TextCard> fetch({bool preferEnglish = false}) async {
-    final List<Future<TextCard> Function()> chain =
-        preferEnglish ? [_fetchSep, _fetchChinese] : [_fetchChinese, _fetchSep];
+    final List<Future<TextCard> Function()> chain = preferEnglish
+        ? [_fetchSep, _fetchChinese]
+        : [_fetchChinese];
     Object? lastError;
     for (final Future<TextCard> Function() provider in chain) {
       try {
@@ -70,7 +68,11 @@ class PhilosophyAdapter implements CardAdapter {
       if (candidate == null) break;
       try {
         final ({ExtractedArticle article, List<CardLink> links}) loaded =
-            await _wiki.loadArticle(candidate.title, lang: 'zh', maxParagraphs: 4);
+            await _wiki.loadArticle(
+              candidate.title,
+              lang: 'zh',
+              maxParagraphs: 4,
+            );
         if (loaded.article.body.length < 100) continue;
         final String title = loaded.article.title.isNotEmpty
             ? loaded.article.title
@@ -131,16 +133,20 @@ class PhilosophyAdapter implements CardAdapter {
     }
     final List<({String label, String url})> pool =
         List<({String label, String url})>.of(entries)..shuffle(_rng);
-    for (final ({String label, String url}) entry
-        in pool.take(NetPolicy.adapterAttempts)) {
+    for (final ({String label, String url}) entry in pool.take(
+      NetPolicy.adapterAttempts,
+    )) {
       try {
         final String html = await _net.getText(Uri.parse(entry.url));
-        final ExtractedArticle article =
-            TextCleaner.extractIntro(html, maxParagraphs: 3);
+        final ExtractedArticle article = TextCleaner.extractIntro(
+          html,
+          maxParagraphs: 3,
+        );
         final String body = article.body;
         if (body.length < 160) continue;
-        final String title =
-            article.title.isNotEmpty ? article.title : entry.label;
+        final String title = article.title.isNotEmpty
+            ? article.title
+            : entry.label;
         return TextCard(
           id: 'sep:${entry.url}',
           kind: kind,

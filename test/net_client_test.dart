@@ -42,8 +42,11 @@ void main() {
     await expectLater(
       client.getText(Uri.parse('https://example.com/x')),
       throwsA(
-        isA<SourceException>()
-            .having((SourceException e) => e.statusCode, 'statusCode', 503),
+        isA<SourceException>().having(
+          (SourceException e) => e.statusCode,
+          'statusCode',
+          503,
+        ),
       ),
     );
   });
@@ -61,10 +64,7 @@ void main() {
         ),
       ),
     );
-    expect(
-      await client.getText(Uri.parse('https://example.com/x')),
-      'Café',
-    );
+    expect(await client.getText(Uri.parse('https://example.com/x')), 'Café');
   });
 
   test('SPARQL 用 POST 提交 query', () async {

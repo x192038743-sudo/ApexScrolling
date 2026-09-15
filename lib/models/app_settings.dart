@@ -12,9 +12,9 @@ enum AppThemeOption {
   final String label;
 
   static AppThemeOption fromId(String id) => AppThemeOption.values.firstWhere(
-        (AppThemeOption o) => o.id == id,
-        orElse: () => AppThemeOption.system,
-      );
+    (AppThemeOption o) => o.id == id,
+    orElse: () => AppThemeOption.system,
+  );
 }
 
 /// 词条「冷门」档位：站点链接数阈值。
@@ -29,9 +29,9 @@ enum WikiRarity {
   final String label;
 
   static WikiRarity fromId(String id) => WikiRarity.values.firstWhere(
-        (WikiRarity r) => r.name == id,
-        orElse: () => WikiRarity.loose,
-      );
+    (WikiRarity r) => r.name == id,
+    orElse: () => WikiRarity.loose,
+  );
 }
 
 /// 本地设置（无账号、无云端，全部存 SharedPreferences）。
@@ -67,8 +67,19 @@ class AppSettings {
   final int englishPercent;
 
   /// 滑块档位（0,10,…,100）。
-  static const List<int> englishPercentStops =
-      <int>[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  static const List<int> englishPercentStops = <int>[
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+  ];
 
   static const List<double> fontScales = <double>[0.9, 1.0, 1.14];
 
@@ -83,32 +94,30 @@ class AppSettings {
     AppThemeOption? theme,
     WikiRarity? wikiRarity,
     int? englishPercent,
-  }) =>
-      AppSettings(
-        enabledSources: enabledSources ?? this.enabledSources,
-        fontScaleLevel: fontScaleLevel ?? this.fontScaleLevel,
-        theme: theme ?? this.theme,
-        wikiRarity: wikiRarity ?? this.wikiRarity,
-        englishPercent: englishPercent ?? this.englishPercent,
-      );
+  }) => AppSettings(
+    enabledSources: enabledSources ?? this.enabledSources,
+    fontScaleLevel: fontScaleLevel ?? this.fontScaleLevel,
+    theme: theme ?? this.theme,
+    wikiRarity: wikiRarity ?? this.wikiRarity,
+    englishPercent: englishPercent ?? this.englishPercent,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'enabledSources':
-            enabledSources.map((CardKind k) => k.id).toList(growable: false),
-        'fontScaleLevel': fontScaleLevel,
-        'theme': theme.id,
-        'wikiRarity': wikiRarity.name,
-        'englishPercent': englishPercent,
-      };
+    'enabledSources': enabledSources
+        .map((CardKind k) => k.id)
+        .toList(growable: false),
+    'fontScaleLevel': fontScaleLevel,
+    'theme': theme.id,
+    'wikiRarity': wikiRarity.name,
+    'englishPercent': englishPercent,
+  };
 
   static AppSettings fromJson(Map<String, dynamic> json) {
     final List<dynamic>? sources = json['enabledSources'] as List<dynamic>?;
     return AppSettings(
       enabledSources: sources == null
           ? const AppSettings().enabledSources
-          : sources
-              .map((dynamic e) => CardKind.fromId(e.toString()))
-              .toSet(),
+          : sources.map((dynamic e) => CardKind.fromId(e.toString())).toSet(),
       fontScaleLevel: json['fontScaleLevel'] as int? ?? 1,
       theme: AppThemeOption.fromId(json['theme'] as String? ?? 'system'),
       wikiRarity: WikiRarity.fromId(json['wikiRarity'] as String? ?? 'loose'),

@@ -118,7 +118,9 @@ class MediaWikiClient {
       }
     }
     final Element? root =
-        doc.querySelector('.mw-parser-output') ?? doc.body ?? doc.documentElement;
+        doc.querySelector('.mw-parser-output') ??
+        doc.body ??
+        doc.documentElement;
     final String raw = root?.text ?? '';
     return _stripChromeLines(TextCleaner.normalizeWhitespace(raw));
   }

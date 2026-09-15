@@ -15,9 +15,9 @@ import 'mediawiki_client.dart';
 /// 英文走古登堡计划（按章取一整章）。目录型页面会被过滤掉。
 class ClassicExcerptAdapter implements CardAdapter {
   ClassicExcerptAdapter(NetClient net, {Random? random})
-      : _rng = random ?? Random(),
-        _wikisource = MediaWikiClient(net, apiUrl: Endpoints.wikisourceApi),
-        _gutendex = GutendexClient(net, random: random);
+    : _rng = random ?? Random(),
+      _wikisource = MediaWikiClient(net, apiUrl: Endpoints.wikisourceApi),
+      _gutendex = GutendexClient(net, random: random);
 
   /// 单卡正文上限（整篇作品的截断上限）。
   static const int maxChars = 15000;
@@ -42,7 +42,7 @@ class ClassicExcerptAdapter implements CardAdapter {
   Future<TextCard> fetch({bool preferEnglish = false}) async {
     final List<Future<TextCard?> Function()> chain = preferEnglish
         ? [_fetchEnglish, _fetchChinese]
-        : [_fetchChinese, _fetchEnglish];
+        : [_fetchChinese];
     Object? lastError;
     for (final Future<TextCard?> Function() provider in chain) {
       for (var attempt = 0; attempt < NetPolicy.adapterAttempts; attempt++) {
@@ -67,16 +67,17 @@ class ClassicExcerptAdapter implements CardAdapter {
       if (text.length < minChineseChars) continue;
       // 目录 / 篇目索引页直接跳过（《道德經》《古詩十九首》这类）。
       if (TextCleaner.looksLikeIndex(text)) continue;
-      final String body =
-          TextCleaner.limitToWholeParagraphs(text, maxChars: maxChars);
+      final String body = TextCleaner.limitToWholeParagraphs(
+        text,
+        maxChars: maxChars,
+      );
       if (body.length < minChineseChars) continue;
       _remember(work.title);
       return TextCard(
         id: 'classic:zh:${work.title}',
         kind: kind,
         title: work.display,
-        subtitle:
-            '${work.author} · 维基文库${work.classical ? ' · 文言' : ''}',
+        subtitle: '${work.author} · 维基文库${work.classical ? ' · 文言' : ''}',
         body: body,
         attribution: AdapterAttribution.wikisource,
         sourceUrl:
@@ -96,8 +97,10 @@ class ClassicExcerptAdapter implements CardAdapter {
     if (book == null) return null;
     final int bookId = (book['id'] as int?) ?? 0;
     if (_recent.contains('en:$bookId')) return null;
-    final String? chapter =
-        await _gutendex.pickWholeChapter(book, maxChars: maxChars);
+    final String? chapter = await _gutendex.pickWholeChapter(
+      book,
+      maxChars: maxChars,
+    );
     if (chapter == null) return null;
     _remember('en:$bookId');
     return TextCard(

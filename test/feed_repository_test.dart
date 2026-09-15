@@ -43,10 +43,12 @@ class _OkAdapter implements CardAdapter {
   final String displayName;
 
   int calls = 0;
+  bool? lastPreferEnglish;
 
   @override
   Future<TextCard> fetch({bool preferEnglish = false}) async {
     calls++;
+    lastPreferEnglish = preferEnglish;
     return TextCard(
       id: '${kind.id}:$calls',
       kind: kind,
@@ -68,21 +70,19 @@ FeedRepository buildRepository({
   required CardCache cache,
   required AppSettings settings,
   required Map<CardKind, CardAdapter> adapters,
-}) =>
-    FeedRepository(
-      net: NetClient(
-        client: MockClient((http.Request request) async => emptyResponse()),
-      ),
-      cache: cache,
-      settings: settings,
-      adapters: adapters,
-      random: Random(11),
-    );
+}) => FeedRepository(
+  net: NetClient(
+    client: MockClient((http.Request request) async => emptyResponse()),
+  ),
+  cache: cache,
+  settings: settings,
+  adapters: adapters,
+  random: Random(11),
+);
 
 void main() {
   test('单源失败自动换源重抽', () async {
-    final _FailingAdapter failing =
-        _FailingAdapter(CardKind.poetry, '诗词名句');
+    final _FailingAdapter failing = _FailingAdapter(CardKind.poetry, '诗词名句');
     final _OkAdapter ok = _OkAdapter(CardKind.howTo, '实用技能');
     final FeedRepository repository = buildRepository(
       cache: await buildCache(),
@@ -102,28 +102,19 @@ void main() {
   });
 
   test('同一源连续失败两次后熔断 60s', () async {
-    final _FailingAdapter failing =
-        _FailingAdapter(CardKind.poetry, '诗词名句');
+    final _FailingAdapter failing = _FailingAdapter(CardKind.poetry, '诗词名句');
     final _OkAdapter ok = _OkAdapter(CardKind.howTo, '实用技能');
     final FeedRepository repository = buildRepository(
       cache: await buildCache(),
-      settings: const AppSettings(
-        enabledSources: <CardKind>{CardKind.poetry},
-      ),
+      settings: const AppSettings(enabledSources: <CardKind>{CardKind.poetry}),
       adapters: <CardKind, CardAdapter>{
         CardKind.poetry: failing,
         CardKind.howTo: ok,
       },
     );
 
-    await expectLater(
-      repository.nextCard(),
-      throwsA(isA<SourceException>()),
-    );
-    await expectLater(
-      repository.nextCard(),
-      throwsA(isA<SourceException>()),
-    );
+    await expectLater(repository.nextCard(), throwsA(isA<SourceException>()));
+    await expectLater(repository.nextCard(), throwsA(isA<SourceException>()));
     expect(repository.healthOf(CardKind.poetry).isBlocked, isTrue);
 
     // 打开另一个源后，熔断的源不再被调用。
@@ -151,9 +142,7 @@ void main() {
     );
     final FeedRepository repository = buildRepository(
       cache: cache,
-      settings: const AppSettings(
-        enabledSources: <CardKind>{CardKind.poetry},
-      ),
+      settings: const AppSettings(enabledSources: <CardKind>{CardKind.poetry}),
       adapters: <CardKind, CardAdapter>{
         CardKind.poetry: _FailingAdapter(CardKind.poetry, '诗词名句'),
       },
@@ -177,9 +166,7 @@ void main() {
       body: '正文',
       attribution: '维基百科',
       depth: TextCard.maxDepth,
-      links: const <CardLink>[
-        CardLink(label: '下一个', title: '下一个'),
-      ],
+      links: const <CardLink>[CardLink(label: '下一个', title: '下一个')],
       fetchedAt: DateTime.now(),
     );
     await expectLater(
@@ -204,5 +191,68 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('英文占比为零时不会请求英文，切换到百分百后才请求英文', () async {
+    final _OkAdapter adapter = _OkAdapter(CardKind.prose, '短篇小说');
+    final FeedRepository repository = buildRepository(
+      cache: await buildCache(),
+      settings: const AppSettings(
+        enabledSources: <CardKind>{CardKind.prose},
+        englishPercent: 0,
+      ),
+      adapters: <CardKind, CardAdapter>{CardKind.prose: adapter},
+    );
+
+    await repository.nextCard();
+    expect(adapter.lastPreferEnglish, isFalse);
+    repository.updateSettings(
+      const AppSettings(
+        enabledSources: <CardKind>{CardKind.prose},
+        englishPercent: 100,
+      ),
+    );
+    await repository.nextCard();
+    expect(adapter.lastPreferEnglish, isTrue);
+  });
+
+  test('英文占比为零时离线缓存也不会返回英文卡片', () async {
+    final CardCache cache = await buildCache();
+    await cache.save(
+      TextCard(
+        id: 'prose:en:cached',
+        kind: CardKind.prose,
+        title: 'English cache',
+        subtitle: 'English',
+        body: 'cached',
+        attribution: 'test',
+        fetchedAt: DateTime.now(),
+      ),
+    );
+    await cache.save(
+      TextCard(
+        id: 'prose:zh:cached',
+        kind: CardKind.prose,
+        title: '中文缓存',
+        subtitle: '中文',
+        body: '缓存正文',
+        attribution: 'test',
+        fetchedAt: DateTime.now(),
+      ),
+    );
+    final FeedRepository repository = buildRepository(
+      cache: cache,
+      settings: const AppSettings(
+        enabledSources: <CardKind>{CardKind.prose},
+        englishPercent: 0,
+      ),
+      adapters: <CardKind, CardAdapter>{
+        CardKind.prose: _FailingAdapter(CardKind.prose, '短篇小说'),
+      },
+    );
+
+    final FeedFetchResult result = await repository.nextCard();
+    expect(result.fromCache, isTrue);
+    expect(result.card.isEnglish, isFalse);
   });
 }

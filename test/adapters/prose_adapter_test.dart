@@ -62,7 +62,7 @@ void main() {
       ),
       random: Random(8),
     );
-    final TextCard card = await adapter.fetch();
+    final TextCard card = await adapter.fetch(preferEnglish: true);
     expect(card.attribution, contains('古登堡计划'));
     expect(card.subtitle, contains('Anton Chekhov'));
     expect(card.body.length, greaterThan(80));

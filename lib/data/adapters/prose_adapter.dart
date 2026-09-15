@@ -15,9 +15,9 @@ import 'mediawiki_client.dart';
 /// 英文走古登堡计划（按章取一整章）。
 class ProseAdapter implements CardAdapter {
   ProseAdapter(NetClient net, {Random? random})
-      : _rng = random ?? Random(),
-        _wikisource = MediaWikiClient(net, apiUrl: Endpoints.wikisourceApi),
-        _gutendex = GutendexClient(net, random: random);
+    : _rng = random ?? Random(),
+      _wikisource = MediaWikiClient(net, apiUrl: Endpoints.wikisourceApi),
+      _gutendex = GutendexClient(net, random: random);
 
   static const int maxChars = 15000;
   static const int minChineseChars = 300;
@@ -39,7 +39,7 @@ class ProseAdapter implements CardAdapter {
   Future<TextCard> fetch({bool preferEnglish = false}) async {
     final List<Future<TextCard?> Function()> chain = preferEnglish
         ? [_fetchEnglish, _fetchChinese]
-        : [_fetchChinese, _fetchEnglish];
+        : [_fetchChinese];
     Object? lastError;
     for (final Future<TextCard?> Function() provider in chain) {
       for (var attempt = 0; attempt < NetPolicy.adapterAttempts; attempt++) {
@@ -63,8 +63,10 @@ class ProseAdapter implements CardAdapter {
       final String text = await _wikisource.fetchPlainText(work.title);
       if (text.length < minChineseChars) continue;
       if (TextCleaner.looksLikeIndex(text)) continue;
-      final String body =
-          TextCleaner.limitToWholeParagraphs(text, maxChars: maxChars);
+      final String body = TextCleaner.limitToWholeParagraphs(
+        text,
+        maxChars: maxChars,
+      );
       if (body.length < minChineseChars) continue;
       _remember(work.title);
       return TextCard(
@@ -83,13 +85,16 @@ class ProseAdapter implements CardAdapter {
   }
 
   Future<TextCard?> _fetchEnglish() async {
-    final Map<String, dynamic>? book =
-        await _gutendex.randomBook(authors: proseAuthorsEn);
+    final Map<String, dynamic>? book = await _gutendex.randomBook(
+      authors: proseAuthorsEn,
+    );
     if (book == null) return null;
     final int bookId = (book['id'] as int?) ?? 0;
     if (_recent.contains('en:$bookId')) return null;
-    final String? chapter =
-        await _gutendex.pickWholeChapter(book, maxChars: maxChars);
+    final String? chapter = await _gutendex.pickWholeChapter(
+      book,
+      maxChars: maxChars,
+    );
     if (chapter == null) return null;
     _remember('en:$bookId');
     return TextCard(

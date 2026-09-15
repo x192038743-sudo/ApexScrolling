@@ -21,18 +21,14 @@ http.Response htmlResponse(String body, {int status = 200}) =>
     http.Response.bytes(
       utf8.encode(body),
       status,
-      headers: <String, String>{
-        'content-type': 'text/html; charset=utf-8',
-      },
+      headers: <String, String>{'content-type': 'text/html; charset=utf-8'},
     );
 
 http.Response textResponse(String body, {int status = 200}) =>
     http.Response.bytes(
       utf8.encode(body),
       status,
-      headers: <String, String>{
-        'content-type': 'text/plain; charset=utf-8',
-      },
+      headers: <String, String>{'content-type': 'text/plain; charset=utf-8'},
     );
 
 http.Response emptyResponse({int status = 500}) =>

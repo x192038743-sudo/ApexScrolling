@@ -43,9 +43,9 @@ class WikiSourceClient {
     int limit = 12,
   }) async {
     if (classes.isEmpty) return const <WikiCandidate>[];
-    final String values =
-        classes.map((String qid) => 'wd:$qid').join(' ');
-    final String query = '''
+    final String values = classes.map((String qid) => 'wd:$qid').join(' ');
+    final String query =
+        '''
 SELECT ?item ?itemLabel ?count ?zhTitle ?enTitle WHERE {
   VALUES ?cls { $values }
   ?item wdt:P31 ?cls .
@@ -115,8 +115,10 @@ LIMIT $limit
   /// 抽取条目内链（兔子洞入口）。
   List<CardLink> linksFrom(String html, {String lang = 'zh', int limit = 5}) =>
       TextCleaner.extractWikiLinks(html, lang: lang, limit: limit)
-          .map((({String label, String title, String lang}) l) =>
-              CardLink(label: l.label, title: l.title, lang: l.lang))
+          .map(
+            (({String label, String title, String lang}) l) =>
+                CardLink(label: l.label, title: l.title, lang: l.lang),
+          )
           .toList();
 
   /// 一次取回条目导语 + 内链。

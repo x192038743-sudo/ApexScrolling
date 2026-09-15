@@ -11,7 +11,7 @@ abstract class CardAdapter {
   /// 抓取一张卡片；失败时抛 [SourceException]。
   ///
   /// [preferEnglish] 为 true 时优先给英文内容（SEP、古登堡、英文维基等）；
-  /// 没有英文提供者的源（如诗词）忽略该参数，始终返回中文。
+  /// 为 false 时严格使用中文提供者。没有英文提供者的源（如诗词）忽略该参数。
   Future<TextCard> fetch({bool preferEnglish = false});
 }
 

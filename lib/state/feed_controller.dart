@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/feed_repository.dart';
 import '../data/net_client.dart';
+import '../models/app_settings.dart';
 import '../models/text_card.dart';
 import 'providers.dart';
 
@@ -31,13 +32,12 @@ class FeedState {
     bool? offline,
     String? message,
     bool clearMessage = false,
-  }) =>
-      FeedState(
-        cards: cards ?? this.cards,
-        loading: loading ?? this.loading,
-        offline: offline ?? this.offline,
-        message: clearMessage ? null : (message ?? this.message),
-      );
+  }) => FeedState(
+    cards: cards ?? this.cards,
+    loading: loading ?? this.loading,
+    offline: offline ?? this.offline,
+    message: clearMessage ? null : (message ?? this.message),
+  );
 }
 
 /// 滑动信息流控制器：预取、去重、换源重抽、兔子洞插入。
@@ -54,6 +54,18 @@ class FeedController extends Notifier<FeedState> {
   @override
   FeedState build() {
     _repository = ref.watch(feedRepositoryProvider);
+    ref.listen<AppSettings>(settingsControllerProvider, (
+      AppSettings? previous,
+      AppSettings next,
+    ) {
+      if (next.englishPercent != 0 || state.cards.isEmpty) return;
+      final List<TextCard> chineseCards = state.cards
+          .where((TextCard card) => !card.isEnglish)
+          .toList(growable: false);
+      if (chineseCards.length != state.cards.length) {
+        state = state.copyWith(cards: chineseCards);
+      }
+    });
     return const FeedState();
   }
 
@@ -119,11 +131,7 @@ class FeedController extends Notifier<FeedState> {
       if (!_seenIds.add(card.id)) return null;
       final List<TextCard> cards = List<TextCard>.of(state.cards)
         ..insert(index + 1, card);
-      state = state.copyWith(
-        cards: cards,
-        offline: false,
-        clearMessage: true,
-      );
+      state = state.copyWith(cards: cards, offline: false, clearMessage: true);
       return card;
     } on SourceException catch (error) {
       if (!ref.mounted) return null;

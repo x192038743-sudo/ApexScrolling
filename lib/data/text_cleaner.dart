@@ -71,12 +71,10 @@ class TextCleaner {
     int minParagraphLength = 24,
   }) {
     final Document doc = html_parser.parse(html);
-    final String title = _firstNonEmpty(
-      <String>[
-        doc.querySelector('h1')?.text ?? '',
-        doc.querySelector('title')?.text ?? '',
-      ],
-    );
+    final String title = _firstNonEmpty(<String>[
+      doc.querySelector('h1')?.text ?? '',
+      doc.querySelector('title')?.text ?? '',
+    ]);
     _stripNoiseNodes(doc);
 
     final List<String> paragraphs = <String>[];
@@ -87,9 +85,7 @@ class TextCleaner {
         if (paragraphs.isNotEmpty) break;
         continue;
       }
-      final String text = normalizeWhitespace(
-        stripCitationMarks(el.text),
-      );
+      final String text = normalizeWhitespace(stripCitationMarks(el.text));
       if (text.length < minParagraphLength) continue;
       paragraphs.add(text);
       if (paragraphs.length >= maxParagraphs) break;
@@ -156,7 +152,9 @@ class TextCleaner {
       // 过滤引用角标、纯数字、纯标点这类「伪链接」。
       if (label.length < 2 || label.length > 40) continue;
       if (RegExp(r'^[\[\(【（]?\s*\d+\s*[\]\)】）]?$').hasMatch(label)) continue;
-      if (RegExp(r'^[\s\d\p{P}\p{S}]+$', unicode: true).hasMatch(label)) continue;
+      if (RegExp(r'^[\s\d\p{P}\p{S}]+$', unicode: true).hasMatch(label)) {
+        continue;
+      }
       if (!seen.add(raw)) continue;
       result.add((label: label, title: raw, lang: lang));
       if (result.length >= limit) break;
@@ -172,13 +170,19 @@ class TextCleaner {
     text = text.replaceAll(RegExp(r'<ref[^>]*/>'), '');
     text = text.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
     text = _removeBalanced(text, '{|', '|}');
-    text = text.replaceAllMapped(RegExp(r'\[\[(?:[^\[\]|]*\|)?([^\[\]|]*)\]\]'),
-        (Match m) => m.group(1) ?? '');
-    text = text.replaceAllMapped(RegExp(r'\[(?:https?://\S+)\s*([^\]]*)\]'),
-        (Match m) => m.group(1) ?? '');
+    text = text.replaceAllMapped(
+      RegExp(r'\[\[(?:[^\[\]|]*\|)?([^\[\]|]*)\]\]'),
+      (Match m) => m.group(1) ?? '',
+    );
+    text = text.replaceAllMapped(
+      RegExp(r'\[(?:https?://\S+)\s*([^\]]*)\]'),
+      (Match m) => m.group(1) ?? '',
+    );
     text = text.replaceAll(RegExp(r"'{2,}"), '');
-    text = text.replaceAll(RegExp(r'^[=]{2,}\s*(.*?)\s*[=]{2,}$',
-        multiLine: true), r'\1');
+    text = text.replaceAll(
+      RegExp(r'^[=]{2,}\s*(.*?)\s*[=]{2,}$', multiLine: true),
+      r'\1',
+    );
     text = htmlToPlainText(text);
     return normalizeWhitespace(text);
   }
@@ -234,13 +238,14 @@ class TextCleaner {
 
   /// 按空行切段，过滤只有页码、标号之类的碎片。
   static List<String> splitParagraphs(String text) {
-    return normalizeWhitespace(text)
-        .split(RegExp(r'\n\s*\n'))
-        .map((String p) => p.trim())
-        .where((String p) {
+    return normalizeWhitespace(
+      text,
+    ).split(RegExp(r'\n\s*\n')).map((String p) => p.trim()).where((String p) {
       if (p.length < 2) return false;
       final String noPunct = p.replaceAll(
-          RegExp(r'[\s\d\p{P}\p{S}]', unicode: true), '');
+        RegExp(r'[\s\d\p{P}\p{S}]', unicode: true),
+        '',
+      );
       return noPunct.isNotEmpty;
     }).toList();
   }
@@ -270,8 +275,12 @@ class TextCleaner {
       final String whole = paragraphs.join('\n\n');
       return whole.length <= maxChars
           ? whole
-          : _sliceInsideParagraph(whole,
-              minChars: minChars, maxChars: maxChars, rng: rng);
+          : _sliceInsideParagraph(
+              whole,
+              minChars: minChars,
+              maxChars: maxChars,
+              rng: rng,
+            );
     }
 
     final int start = starts[rng.nextInt(starts.length)];
@@ -309,8 +318,12 @@ class TextCleaner {
       // 段落被 maxChars 截断导致偏短：补上下一段，再按句切到上限内。
       result = '$result\n\n${paragraphs[lastIndex + 1]}';
       if (result.length > maxChars) {
-        result = _sliceInsideParagraph(result,
-            minChars: minChars, maxChars: maxChars, rng: rng);
+        result = _sliceInsideParagraph(
+          result,
+          minChars: minChars,
+          maxChars: maxChars,
+          rng: rng,
+        );
       }
     }
     return result;
@@ -326,7 +339,12 @@ class TextCleaner {
     if (paragraph.length <= maxChars) return paragraph;
     final List<String> sentences = _splitSentences(paragraph);
     if (sentences.length <= 1) {
-      return _hardCut(paragraph, minChars: minChars, maxChars: maxChars, rng: rng);
+      return _hardCut(
+        paragraph,
+        minChars: minChars,
+        maxChars: maxChars,
+        rng: rng,
+      );
     }
 
     // 只从「后面还有足够句子」的位置起切，保证凑得满 minChars。
@@ -339,7 +357,12 @@ class TextCleaner {
       if (length >= minChars) starts.add(i);
     }
     if (starts.isEmpty) {
-      return _hardCut(paragraph, minChars: minChars, maxChars: maxChars, rng: rng);
+      return _hardCut(
+        paragraph,
+        minChars: minChars,
+        maxChars: maxChars,
+        rng: rng,
+      );
     }
 
     final int start = starts[rng.nextInt(starts.length)];
@@ -356,8 +379,7 @@ class TextCleaner {
     }
     final String result = buffer.toString().trim();
     return result.length < minChars
-        ? _hardCut(paragraph,
-            minChars: minChars, maxChars: maxChars, rng: rng)
+        ? _hardCut(paragraph, minChars: minChars, maxChars: maxChars, rng: rng)
         : result;
   }
 
@@ -412,8 +434,9 @@ class TextCleaner {
 
     final RegExp sentenceEnd = RegExp(r'[。！？；!?;]');
     final int shortLines = lines
-        .where((String line) =>
-            line.length <= 25 && !sentenceEnd.hasMatch(line))
+        .where(
+          (String line) => line.length <= 25 && !sentenceEnd.hasMatch(line),
+        )
         .length;
     final double shortRatio = shortLines / lines.length;
 
@@ -437,10 +460,7 @@ class TextCleaner {
   ///
   /// 「整篇」作品可能有好几万字（鲁迅《祝福》约 1.1 万字），不能无上限丢给
   /// 渲染层。这里按自然段累积，截到上限前最后一个完整段落；单段过长时按句号切。
-  static String limitToWholeParagraphs(
-    String text, {
-    int maxChars = 15000,
-  }) {
+  static String limitToWholeParagraphs(String text, {int maxChars = 15000}) {
     final String normalized = normalizeWhitespace(text);
     if (normalized.length <= maxChars) return normalized;
 
@@ -511,8 +531,9 @@ class TextCleaner {
 
     // 没有章节标记（单篇/短篇集）时整篇返回。
     if (chapters.length <= 1) return <String>[normalized];
-    final List<String> usable =
-        chapters.where((String c) => c.length >= 400).toList(growable: false);
+    final List<String> usable = chapters
+        .where((String c) => c.length >= 400)
+        .toList(growable: false);
     return usable.isEmpty ? <String>[normalized] : usable;
   }
 

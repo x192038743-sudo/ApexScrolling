@@ -57,10 +57,10 @@ class FeedRepository {
     Random? random,
     AppSettings settings = const AppSettings(),
     Map<CardKind, CardAdapter>? adapters,
-  })  : _net = net,
-        _cache = cache,
-        _rng = random ?? Random(),
-        _settings = settings {
+  }) : _net = net,
+       _cache = cache,
+       _rng = random ?? Random(),
+       _settings = settings {
     _adapters = <CardKind, CardAdapter>{
       CardKind.wikiTerm: WikiTermAdapter(_net, settings, random: _rng),
       CardKind.philosophy: PhilosophyAdapter(_net, random: _rng),
@@ -86,12 +86,18 @@ class FeedRepository {
   /// 设置变化：重新构建受影响的适配器（词条阈值/开关）。
   void updateSettings(AppSettings settings) {
     final bool rarityChanged = settings.wikiRarity != _settings.wikiRarity;
+    final bool languageChanged =
+        settings.englishPercent != _settings.englishPercent;
     _settings = settings;
+    if (languageChanged) _ready.clear();
     if (!rarityChanged) return;
     final CardAdapter? existing = _adapters[CardKind.wikiTerm];
     if (existing is WikiTermAdapter || existing == null) {
-      _adapters[CardKind.wikiTerm] =
-          WikiTermAdapter(_net, settings, random: _rng);
+      _adapters[CardKind.wikiTerm] = WikiTermAdapter(
+        _net,
+        settings,
+        random: _rng,
+      );
     }
   }
 
@@ -122,8 +128,7 @@ class FeedRepository {
         .where((CardKind kind) => !healthOf(kind).isBlocked)
         .toList();
     // 全部熔断时也允许兜底试一次，避免长时间无内容。
-    final List<CardKind> pool =
-        available.isEmpty ? enabled : available;
+    final List<CardKind> pool = available.isEmpty ? enabled : available;
     pool.shuffle(_rng);
 
     final List<String> errors = <String>[];
@@ -131,21 +136,21 @@ class FeedRepository {
       for (final CardKind kind in pool.take(attempts))
         if (_adapters[kind] != null) _fetchFrom(kind),
     ];
-    final TextCard? card = racing.isEmpty
-        ? null
-        : await _race(racing, errors);
+    final TextCard? card = racing.isEmpty ? null : await _race(racing, errors);
     if (card != null) {
       return FeedFetchResult(card: card, fromCache: false, errors: errors);
     }
 
     // 三源皆失败：退回离线缓存。
-    final TextCard? cached = _cache.randomCard();
+    final TextCard? cached = _cache.randomCard(
+      where: _settings.englishPercent == 0
+          ? (TextCard card) => !card.isEnglish
+          : null,
+    );
     if (cached != null) {
       return FeedFetchResult(card: cached, fromCache: true, errors: errors);
     }
-    throw SourceException(
-      errors.isEmpty ? '网络不可用' : errors.first,
-    );
+    throw SourceException(errors.isEmpty ? '网络不可用' : errors.first);
   }
 
   /// 竞速：首个成功的卡片优先返回，其余成功结果暂存待用。
@@ -186,8 +191,9 @@ class FeedRepository {
   Future<TextCard> _fetchFrom(CardKind kind) async {
     final CardAdapter adapter = _adapters[kind]!;
     try {
-      final TextCard card =
-          await adapter.fetch(preferEnglish: _shouldUseEnglish());
+      final TextCard card = await adapter.fetch(
+        preferEnglish: _shouldUseEnglish(),
+      );
       healthOf(kind).recordSuccess();
       await _cache.save(card);
       return card;

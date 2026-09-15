@@ -62,43 +62,43 @@ class AppTextStyles {
   static const String serifLatin = 'Georgia';
 
   static TextStyle title(double scale, AppPalette palette) => TextStyle(
-        fontFamily: serifLatin,
-        fontFamilyFallback: serifFallback,
-        fontSize: 27 * scale,
-        height: 1.28,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.2,
-        color: palette.text,
-      );
+    fontFamily: serifLatin,
+    fontFamilyFallback: serifFallback,
+    fontSize: 27 * scale,
+    height: 1.28,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+    color: palette.text,
+  );
 
   static TextStyle body(double scale, AppPalette palette) => TextStyle(
-        fontFamily: serifLatin,
-        fontFamilyFallback: serifFallback,
-        fontSize: 18 * scale,
-        height: 1.85,
-        letterSpacing: 0.3,
-        color: palette.text,
-      );
+    fontFamily: serifLatin,
+    fontFamilyFallback: serifFallback,
+    fontSize: 18 * scale,
+    height: 1.85,
+    letterSpacing: 0.3,
+    color: palette.text,
+  );
 
   static TextStyle meta(double scale, AppPalette palette) => TextStyle(
-        fontFamily: serifLatin,
-        fontFamilyFallback: serifFallback,
-        fontSize: 12.5 * (0.94 + 0.06 * scale),
-        height: 1.5,
-        letterSpacing: 0.5,
-        color: palette.muted,
-      );
+    fontFamily: serifLatin,
+    fontFamilyFallback: serifFallback,
+    fontSize: 12.5 * (0.94 + 0.06 * scale),
+    height: 1.5,
+    letterSpacing: 0.5,
+    color: palette.muted,
+  );
 
   static TextStyle link(double scale, AppPalette palette) => TextStyle(
-        fontFamily: serifLatin,
-        fontFamilyFallback: serifFallback,
-        fontSize: 16 * scale,
-        height: 1.6,
-        color: palette.text,
-        decoration: TextDecoration.underline,
-        decorationStyle: TextDecorationStyle.dotted,
-        decorationColor: palette.muted,
-      );
+    fontFamily: serifLatin,
+    fontFamilyFallback: serifFallback,
+    fontSize: 16 * scale,
+    height: 1.6,
+    color: palette.text,
+    decoration: TextDecoration.underline,
+    decorationStyle: TextDecorationStyle.dotted,
+    decorationColor: palette.muted,
+  );
 }
 
 /// 主题构建：Material 3 + 极简底色（卡片内不出现任何装饰元素）。
@@ -112,10 +112,7 @@ class AppTheme {
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: palette.accent,
       brightness: brightness,
-    ).copyWith(
-      surface: palette.background,
-      onSurface: palette.text,
-    );
+    ).copyWith(surface: palette.background, onSurface: palette.text);
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -136,9 +133,8 @@ class AppTheme {
         ),
       ),
       dividerColor: palette.divider,
-      textTheme: Typography.material2021(
-        platform: TargetPlatform.android,
-      ).white.apply(
+      textTheme: Typography.material2021(platform: TargetPlatform.android).white
+          .apply(
             fontFamily: AppTextStyles.serifLatin,
             fontFamilyFallback: AppTextStyles.serifFallback,
             bodyColor: palette.text,
@@ -158,11 +154,13 @@ class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
-          textStyle: WidgetStatePropertyAll<TextStyle>(TextStyle(
-            fontFamily: AppTextStyles.serifLatin,
-            fontFamilyFallback: AppTextStyles.serifFallback,
-            fontSize: 14,
-          )),
+          textStyle: WidgetStatePropertyAll<TextStyle>(
+            TextStyle(
+              fontFamily: AppTextStyles.serifLatin,
+              fontFamilyFallback: AppTextStyles.serifFallback,
+              fontSize: 14,
+            ),
+          ),
           foregroundColor: WidgetStateProperty.resolveWith(
             (Set<WidgetState> states) => states.contains(WidgetState.selected)
                 ? palette.background

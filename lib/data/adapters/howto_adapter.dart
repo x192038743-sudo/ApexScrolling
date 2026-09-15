@@ -12,9 +12,9 @@ import 'mediawiki_client.dart';
 /// 站点不可达时自动退回中文维基教科书的教程条目。
 class HowToAdapter implements CardAdapter {
   HowToAdapter(NetClient net, {Random? random})
-      : _net = net,
-        _rng = random ?? Random(),
-        _wikibooks = MediaWikiClient(net, apiUrl: Endpoints.wikibooksApi);
+    : _net = net,
+      _rng = random ?? Random(),
+      _wikibooks = MediaWikiClient(net, apiUrl: Endpoints.wikibooksApi);
 
   final NetClient _net;
   final Random _rng;
@@ -68,8 +68,8 @@ class HowToAdapter implements CardAdapter {
     final Object? randomList =
         (randomJson['query'] as Map<String, dynamic>?)?['random'];
     if (randomList is! List || randomList.isEmpty) return null;
-    final Map<String, dynamic> first =
-        (randomList.first as Map).cast<String, dynamic>();
+    final Map<String, dynamic> first = (randomList.first as Map)
+        .cast<String, dynamic>();
     final String title = first['title']?.toString() ?? '';
     final String pageId = first['id']?.toString() ?? '';
     if (title.isEmpty || pageId.isEmpty) return null;
@@ -95,8 +95,7 @@ class HowToAdapter implements CardAdapter {
     final Object? slots = (revisions.first as Map)['slots'];
     if (slots is! Map) return null;
     final Object? main = slots['main'];
-    final String wikitext =
-        main is Map ? (main['*']?.toString() ?? '') : '';
+    final String wikitext = main is Map ? (main['*']?.toString() ?? '') : '';
     if (wikitext.isEmpty) return null;
 
     final List<String> steps = _parseWikiHowSteps(wikitext);
@@ -185,8 +184,9 @@ class HowToAdapter implements CardAdapter {
 
   TextCard _wikibooksCard(String title, String text, List<String> steps) {
     // 有编号步骤时正文取开头简介（更像教程），否则随机取一段正文。
-    final String intro =
-        TextCleaner.splitParagraphs(text).take(2).join('\n\n').trim();
+    final String intro = TextCleaner.splitParagraphs(
+      text,
+    ).take(2).join('\n\n').trim();
     final String excerpt = steps.isNotEmpty && intro.length >= 60
         ? intro
         : TextCleaner.sliceExcerpt(
@@ -203,8 +203,7 @@ class HowToAdapter implements CardAdapter {
       body: excerpt,
       steps: steps,
       attribution: AdapterAttribution.wikibooks,
-      sourceUrl:
-          'https://zh.wikibooks.org/wiki/${Uri.encodeComponent(title)}',
+      sourceUrl: 'https://zh.wikibooks.org/wiki/${Uri.encodeComponent(title)}',
       fetchedAt: DateTime.now(),
     );
   }
@@ -216,8 +215,9 @@ class HowToAdapter implements CardAdapter {
       final String line = rawLine.trim();
       if (!line.startsWith('#')) continue;
       if (line.startsWith('##')) continue;
-      final String cleaned =
-          TextCleaner.stripWikitext(line.replaceFirst(RegExp(r'^#+'), ''));
+      final String cleaned = TextCleaner.stripWikitext(
+        line.replaceFirst(RegExp(r'^#+'), ''),
+      );
       if (cleaned.length < 4 || cleaned.length > 400) continue;
       steps.add(cleaned);
       if (steps.length >= 12) break;

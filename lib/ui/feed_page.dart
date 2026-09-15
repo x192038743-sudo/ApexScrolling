@@ -57,6 +57,17 @@ class _FeedPageState extends ConsumerState<FeedPage> {
     );
   }
 
+  void _goToPrevious() {
+    if (!_pageController.hasClients || _index <= 0) return;
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<String> _translateWord(String word) =>
+      ref.read(translationClientProvider).translateWord(word);
+
   Future<void> _openLink(int index, CardLink link) async {
     final TextCard? card = await ref
         .read(feedControllerProvider.notifier)
@@ -69,9 +80,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const SettingsPage()));
   }
 
   /// 卡片列表变短或清空时（设置变更、清缓存等）把分页拉回有效范围。
@@ -79,8 +90,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
   /// 否则 PageView 的 itemCount 会小于 PageController 停留的页码，
   /// 视口渲染不出任何一页，只剩底色 —— 也就是「灰屏」。
   void _syncPageWithCards(FeedState state) {
-    final bool outOfRange =
-        state.cards.isEmpty || _index >= state.cards.length;
+    final bool outOfRange = state.cards.isEmpty || _index >= state.cards.length;
     if (!outOfRange || _recoveryScheduled) return;
     _recoveryScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,7 +137,9 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                 isCurrent: index == _index,
                 settings: settings,
                 onNext: _goToNext,
+                onPrevious: _goToPrevious,
                 onOpenLink: (CardLink link) => _openLink(index, link),
+                onTranslateWord: _translateWord,
               );
             },
           ),
@@ -145,7 +157,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
             Positioned(
               right: 26,
               bottom: 96,
-              child: _Hint(text: '上滑下一张 · 轻点展开', palette: palette),
+              child: _Hint(text: '上滑下一张 · 轻点展开 · 双击英文词翻译', palette: palette),
             ),
         ],
       ),
@@ -261,10 +273,10 @@ class _Hint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: AppTextStyles.meta(1, palette).copyWith(
-        fontSize: 11,
-        color: palette.muted.withValues(alpha: 0.55),
-      ),
+      style: AppTextStyles.meta(
+        1,
+        palette,
+      ).copyWith(fontSize: 11, color: palette.muted.withValues(alpha: 0.55)),
     );
   }
 }
@@ -287,10 +299,10 @@ class _Notice extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTextStyles.meta(1, palette).copyWith(
-          fontSize: 11.5,
-          color: palette.muted,
-        ),
+        style: AppTextStyles.meta(
+          1,
+          palette,
+        ).copyWith(fontSize: 11.5, color: palette.muted),
       ),
     );
   }

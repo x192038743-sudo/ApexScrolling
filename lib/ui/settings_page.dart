@@ -15,8 +15,9 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppSettings settings = ref.watch(settingsControllerProvider);
-    final SettingsController controller =
-        ref.read(settingsControllerProvider.notifier);
+    final SettingsController controller = ref.read(
+      settingsControllerProvider.notifier,
+    );
     final AppPalette palette = AppPalette.of(context);
     final TextStyle meta = AppTextStyles.meta(1, palette);
 
@@ -31,8 +32,10 @@ class SettingsPage extends ConsumerWidget {
             SwitchListTile(
               value: settings.isEnabled(kind),
               onChanged: (_) => controller.toggleSource(kind),
-              title: Text(kind.label,
-                  style: TextStyle(color: palette.text, fontSize: 15)),
+              title: Text(
+                kind.label,
+                style: TextStyle(color: palette.text, fontSize: 15),
+              ),
               subtitle: Text(
                 _sourceDescription(kind),
                 style: meta.copyWith(fontSize: 12),
@@ -173,16 +176,16 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 18, bottom: 10),
-        child: Text(
-          text,
-          style: AppTextStyles.meta(1, palette).copyWith(
-            letterSpacing: 2.4,
-            fontSize: 11.5,
-            color: palette.accent.withValues(alpha: 0.9),
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 18, bottom: 10),
+    child: Text(
+      text,
+      style: AppTextStyles.meta(1, palette).copyWith(
+        letterSpacing: 2.4,
+        fontSize: 11.5,
+        color: palette.accent.withValues(alpha: 0.9),
+      ),
+    ),
+  );
 }
 
 class _Label extends StatelessWidget {
@@ -193,12 +196,9 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Text(
-          text,
-          style: TextStyle(color: palette.text, fontSize: 14.5),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(text, style: TextStyle(color: palette.text, fontSize: 14.5)),
+  );
 }
 
 /// 排版预览：实时反映字号与主题。
@@ -222,8 +222,10 @@ class _Preview extends StatelessWidget {
         children: <Widget>[
           Text(
             '排版预览',
-            style: AppTextStyles.meta(settings.fontScale, palette)
-                .copyWith(letterSpacing: 1.2),
+            style: AppTextStyles.meta(
+              settings.fontScale,
+              palette,
+            ).copyWith(letterSpacing: 1.2),
           ),
           const SizedBox(height: 10),
           Text(

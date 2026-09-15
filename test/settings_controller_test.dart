@@ -16,9 +16,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     prefs = await SharedPreferences.getInstance();
     container = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     );
     addTearDown(container.dispose);
   });
@@ -34,17 +32,18 @@ void main() {
   });
 
   test('逐源开关会持久化，且至少保留一个源', () {
-    final SettingsController controller =
-        container.read(settingsControllerProvider.notifier);
+    final SettingsController controller = container.read(
+      settingsControllerProvider.notifier,
+    );
     controller.toggleSource(CardKind.poetry);
     expect(
       container.read(settingsControllerProvider).isEnabled(CardKind.poetry),
       isFalse,
     );
 
-    final Map<String, dynamic> stored = jsonDecode(
-      prefs.getString(SettingsController.storageKey)!,
-    ) as Map<String, dynamic>;
+    final Map<String, dynamic> stored =
+        jsonDecode(prefs.getString(SettingsController.storageKey)!)
+            as Map<String, dynamic>;
     expect(stored['enabledSources'], isNot(contains('poetry')));
 
     // 关到只剩一个后不再允许继续关闭。
@@ -57,12 +56,16 @@ void main() {
     ]) {
       controller.toggleSource(kind);
     }
-    expect(container.read(settingsControllerProvider).enabledSources, hasLength(1));
+    expect(
+      container.read(settingsControllerProvider).enabledSources,
+      hasLength(1),
+    );
   });
 
   test('字号三档与冷门度、主题可切换', () {
-    final SettingsController controller =
-        container.read(settingsControllerProvider.notifier);
+    final SettingsController controller = container.read(
+      settingsControllerProvider.notifier,
+    );
     controller.setFontScaleLevel(2);
     controller.setTheme(AppThemeOption.dark);
     controller.setWikiRarity(WikiRarity.strict);
@@ -74,29 +77,29 @@ void main() {
   });
 
   test('英文内容占比会限制范围并持久化', () {
-    final SettingsController controller =
-        container.read(settingsControllerProvider.notifier);
+    final SettingsController controller = container.read(
+      settingsControllerProvider.notifier,
+    );
     controller.setEnglishPercent(71);
     expect(container.read(settingsControllerProvider).englishPercent, 70);
 
     controller.setEnglishPercent(180);
     expect(container.read(settingsControllerProvider).englishPercent, 100);
 
-    final Map<String, dynamic> stored = jsonDecode(
-      prefs.getString(SettingsController.storageKey)!,
-    ) as Map<String, dynamic>;
+    final Map<String, dynamic> stored =
+        jsonDecode(prefs.getString(SettingsController.storageKey)!)
+            as Map<String, dynamic>;
     expect(stored['englishPercent'], 100);
   });
 
   test('重新读取时从本地恢复设置', () {
-    final SettingsController controller =
-        container.read(settingsControllerProvider.notifier);
+    final SettingsController controller = container.read(
+      settingsControllerProvider.notifier,
+    );
     controller.setFontScaleLevel(0);
 
     final ProviderContainer restored = ProviderContainer(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     );
     addTearDown(restored.dispose);
     expect(restored.read(settingsControllerProvider).fontScaleLevel, 0);

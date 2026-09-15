@@ -114,7 +114,11 @@ const List<GutenbergWork> classicWorksEn = <GutenbergWork>[
   GutenbergWork(3330, 'The Analects of Confucius', 'Confucius'),
   GutenbergWork(132, 'The Art of War', 'Sun Tzu'),
   GutenbergWork(5827, 'The Problems of Philosophy', 'Bertrand Russell'),
-  GutenbergWork(9662, 'An Enquiry Concerning Human Understanding', 'David Hume'),
+  GutenbergWork(
+    9662,
+    'An Enquiry Concerning Human Understanding',
+    'David Hume',
+  ),
   GutenbergWork(1232, 'The Prince', 'Niccolò Machiavelli'),
   GutenbergWork(2130, 'Utopia', 'Thomas More'),
   GutenbergWork(3207, 'Leviathan', 'Thomas Hobbes'),

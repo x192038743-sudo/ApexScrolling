@@ -137,8 +137,10 @@ class GutendexClient {
     final List<String> pool = List<String>.of(chapters)..shuffle(_rng);
     for (final String chapter in pool.take(4)) {
       if (TextCleaner.looksLikeIndex(chapter)) continue;
-      final String body =
-          TextCleaner.limitToWholeParagraphs(chapter, maxChars: maxChars);
+      final String body = TextCleaner.limitToWholeParagraphs(
+        chapter,
+        maxChars: maxChars,
+      );
       if (body.length < minChars) continue;
       return body;
     }

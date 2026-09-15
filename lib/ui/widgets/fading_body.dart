@@ -30,10 +30,13 @@ class FadingBody extends StatelessWidget {
         final double lineHeight = painter.preferredLineHeight <= 0
             ? (style.fontSize ?? 18) * (style.height ?? 1.6)
             : painter.preferredLineHeight;
-        final int maxLines =
-            (constraints.maxHeight / lineHeight).floor().clamp(1, 200);
+        final int maxLines = (constraints.maxHeight / lineHeight).floor().clamp(
+          1,
+          200,
+        );
         final double fadeStart =
-            (((maxLines - fadeLines + 0.6) * lineHeight) / constraints.maxHeight)
+            (((maxLines - fadeLines + 0.6) * lineHeight) /
+                    constraints.maxHeight)
                 .clamp(0.35, 0.94);
 
         return ShaderMask(

@@ -19,9 +19,7 @@ class SettingsController extends Notifier<AppSettings> {
     final String? raw = _prefs.getString(storageKey);
     if (raw == null || raw.isEmpty) return const AppSettings();
     try {
-      return AppSettings.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>,
-      );
+      return AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return const AppSettings();
     }

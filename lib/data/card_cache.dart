@@ -57,8 +57,10 @@ class CardCache {
   }
 
   /// 离线时随机取一张缓存卡片（优先取较新的）。
-  TextCard? randomCard() {
-    final List<TextCard> cards = load();
+  TextCard? randomCard({bool Function(TextCard card)? where}) {
+    final List<TextCard> cards = load()
+        .where(where ?? (TextCard card) => true)
+        .toList(growable: false);
     if (cards.isEmpty) return null;
     final int window = min(cards.length, 20);
     return cards[_rng.nextInt(window)];

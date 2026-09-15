@@ -75,7 +75,8 @@ Future<Widget> buildHarness({
     ),
     cache: cache,
     settings: settings,
-    adapters: adapters ??
+    adapters:
+        adapters ??
         <CardKind, CardAdapter>{
           CardKind.poetry: _CannedAdapter(
             CardKind.poetry,

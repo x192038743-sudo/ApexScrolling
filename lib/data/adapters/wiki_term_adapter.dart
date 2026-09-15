@@ -107,6 +107,11 @@ class WikiTermAdapter implements CardAdapter {
   }
 
   Future<WikiCandidate?> _nextCandidate({required bool chineseOnly}) async {
+    // 英文/中文候选池不能混用，否则语言滑块归零后仍可能消费旧英文候选。
+    if (_poolMode != chineseOnly) {
+      _pool.clear();
+      _poolMode = chineseOnly;
+    }
     while (_pool.isNotEmpty) {
       final WikiCandidate candidate = _pool.removeAt(0);
       if (candidate.sitelinks > _settings.wikiRarity.maxSitelinks) continue;
@@ -124,6 +129,8 @@ class WikiTermAdapter implements CardAdapter {
     if (_pool.isEmpty) return null;
     return _nextCandidate(chineseOnly: chineseOnly);
   }
+
+  bool? _poolMode;
 
   void _remember(String title) {
     _recent

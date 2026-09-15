@@ -34,8 +34,9 @@ void main() {
     });
 
     test('缺少摘要时返回空正文而不是抛异常', () {
-      final ExtractedArticle article =
-          TextCleaner.extractIntro('<html><body><h1>空条目</h1></body></html>');
+      final ExtractedArticle article = TextCleaner.extractIntro(
+        '<html><body><h1>空条目</h1></body></html>',
+      );
       expect(article.isEmpty, isTrue);
       expect(
         TextCleaner.extractIntro('<html><body></body></html>').isEmpty,
@@ -48,16 +49,16 @@ void main() {
     test('过滤文件/分类/锚点等非词条链接', () {
       final List<({String label, String title, String lang})> links =
           TextCleaner.extractWikiLinks(
-        '<div><p>'
-        '<a href="./组合数">组合数</a>'
-        '<a href="./File:Example.png">图</a>'
-        '<a href="./Category:数学">分类</a>'
-        '<a href="./二项式定理#历史">锚点</a>'
-        '<a href="https://example.com/x">外链</a>'
-        '<a href="./杨辉三角">杨辉三角</a>'
-        '</p></div>',
-        limit: 5,
-      );
+            '<div><p>'
+            '<a href="./组合数">组合数</a>'
+            '<a href="./File:Example.png">图</a>'
+            '<a href="./Category:数学">分类</a>'
+            '<a href="./二项式定理#历史">锚点</a>'
+            '<a href="https://example.com/x">外链</a>'
+            '<a href="./杨辉三角">杨辉三角</a>'
+            '</p></div>',
+            limit: 5,
+          );
       expect(
         links.map((({String label, String title, String lang}) l) => l.title),
         <String>['组合数', '二项式定理', '杨辉三角'],
@@ -67,7 +68,8 @@ void main() {
 
   group('TextCleaner.stripWikitext', () {
     test('去掉模板、注释、引用、表格与链接标记', () {
-      const String wikitext = '{{header|title=测试}}\n'
+      const String wikitext =
+          '{{header|title=测试}}\n'
           '正文第一句<ref name="a">注</ref>，包含[[内部链接|显示文字]]。\n'
           '<!-- 注释 -->\n'
           '{| class="wikitable"\n|-\n| 表格\n|}\n'
@@ -83,7 +85,8 @@ void main() {
 
   group('TextCleaner.stripGutenbergBoilerplate', () {
     test('切掉项目说明头尾', () {
-      const String raw = '说明\n\n'
+      const String raw =
+          '说明\n\n'
           '*** START OF THE PROJECT GUTENBERG EBOOK MEDITATIONS ***\n\n'
           '正文内容。\n\n'
           '*** END OF THE PROJECT GUTENBERG EBOOK MEDITATIONS ***\n\n'
@@ -118,8 +121,7 @@ void main() {
         40,
         (int i) => '这是第$i句，用来验证句子边界切分是否正确。',
       ).join();
-      final String excerpt =
-          TextCleaner.sliceExcerpt(text, random: Random(3));
+      final String excerpt = TextCleaner.sliceExcerpt(text, random: Random(3));
       expect(excerpt.length, greaterThanOrEqualTo(240));
       expect(excerpt.length, lessThanOrEqualTo(620));
       expect(excerpt.endsWith('。'), isTrue);

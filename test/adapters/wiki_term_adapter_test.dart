@@ -14,15 +14,15 @@ void main() {
   late List<String> requestedHosts;
 
   MockClient buildClient() => MockClient((http.Request request) async {
-        requestedHosts.add(request.url.host);
-        if (request.url.host == 'query.wikidata.org') {
-          return jsonResponse(fixture('sparql_candidates.json'));
-        }
-        if (request.url.host == 'api.wikimedia.org') {
-          return htmlResponse(fixture('wiki_article_zh.html'));
-        }
-        return emptyResponse(status: 404);
-      });
+    requestedHosts.add(request.url.host);
+    if (request.url.host == 'query.wikidata.org') {
+      return jsonResponse(fixture('sparql_candidates.json'));
+    }
+    if (request.url.host == 'api.wikimedia.org') {
+      return htmlResponse(fixture('wiki_article_zh.html'));
+    }
+    return emptyResponse(status: 404);
+  });
 
   setUp(() => requestedHosts = <String>[]);
 
@@ -46,10 +46,7 @@ void main() {
     expect(card.body, isNot(contains('必须被忽略')));
     expect(card.depth, 0);
     // 内链用于兔子洞。
-    expect(
-      card.links.map((CardLink link) => link.title),
-      contains('组合数'),
-    );
+    expect(card.links.map((CardLink link) => link.title), contains('组合数'));
     expect(card.sourceUrl, contains('.wikipedia.org/wiki/'));
   });
 

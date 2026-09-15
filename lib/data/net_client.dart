@@ -19,22 +19,21 @@ class SourceException implements Exception {
 /// 轻量 HTTP 封装：统一 UA、超时、JSON 解析与错误类型。
 class NetClient {
   NetClient({http.Client? client, Map<String, String>? defaultHeaders})
-      : _client = client ?? http.Client(),
-        _defaultHeaders = defaultHeaders ?? const <String, String>{};
+    : _client = client ?? http.Client(),
+      _defaultHeaders = defaultHeaders ?? const <String, String>{};
 
   final http.Client _client;
   final Map<String, String> _defaultHeaders;
 
-  Map<String, String> _headers(Map<String, String>? extra) =>
-      <String, String>{
-        'User-Agent': _ascii(Endpoints.userAgent),
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        for (final MapEntry<String, String> entry in _defaultHeaders.entries)
-          entry.key: _ascii(entry.value),
-        if (extra != null)
-          for (final MapEntry<String, String> entry in extra.entries)
-            entry.key: _ascii(entry.value),
-      };
+  Map<String, String> _headers(Map<String, String>? extra) => <String, String>{
+    'User-Agent': _ascii(Endpoints.userAgent),
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    for (final MapEntry<String, String> entry in _defaultHeaders.entries)
+      entry.key: _ascii(entry.value),
+    if (extra != null)
+      for (final MapEntry<String, String> entry in extra.entries)
+        entry.key: _ascii(entry.value),
+  };
 
   /// HTTP 头只接受 ASCII：这里兜底剔除越界字符，避免个别数据源
   /// 或本地化文案把中文写进请求头导致整个请求失败。
@@ -53,9 +52,10 @@ class NetClient {
     Duration timeout = NetPolicy.requestTimeout,
     Map<String, String>? headers,
   }) async {
-    final http.Response response =
-        await _send(() => _client.get(uri, headers: _headers(headers)),
-            timeout: timeout);
+    final http.Response response = await _send(
+      () => _client.get(uri, headers: _headers(headers)),
+      timeout: timeout,
+    );
     _ensureOk(response, uri);
     return decodeBody(response);
   }
@@ -65,9 +65,10 @@ class NetClient {
     Duration timeout = NetPolicy.downloadTimeout,
     Map<String, String>? headers,
   }) async {
-    final http.Response response =
-        await _send(() => _client.get(uri, headers: _headers(headers)),
-            timeout: timeout);
+    final http.Response response = await _send(
+      () => _client.get(uri, headers: _headers(headers)),
+      timeout: timeout,
+    );
     _ensureOk(response, uri);
     return response.bodyBytes;
   }
@@ -77,9 +78,10 @@ class NetClient {
     Duration timeout = NetPolicy.requestTimeout,
     Map<String, String>? headers,
   }) async {
-    final http.Response response =
-        await _send(() => _client.get(uri, headers: _headers(headers)),
-            timeout: timeout);
+    final http.Response response = await _send(
+      () => _client.get(uri, headers: _headers(headers)),
+      timeout: timeout,
+    );
     _ensureOk(response, uri);
     return _decodeJson(response);
   }
@@ -135,9 +137,10 @@ class NetClient {
     // 优先按响应头里的字符集，其次按 UTF-8 处理。
     final String? contentType = response.headers['content-type'];
     if (contentType != null) {
-      final RegExpMatch? match =
-          RegExp(r'charset=([\w-]+)', caseSensitive: false)
-              .firstMatch(contentType);
+      final RegExpMatch? match = RegExp(
+        r'charset=([\w-]+)',
+        caseSensitive: false,
+      ).firstMatch(contentType);
       final String? charset = match?.group(1)?.toLowerCase();
       if (charset != null && charset != 'utf-8' && charset != 'utf8') {
         try {

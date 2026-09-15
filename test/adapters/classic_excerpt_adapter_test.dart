@@ -18,9 +18,7 @@ String bookJson(int id, String title, String author, String textUrl) =>
       'authors': <Map<String, String>>[
         <String, String>{'name': author},
       ],
-      'formats': <String, String>{
-        'text/plain; charset=utf-8': textUrl,
-      },
+      'formats': <String, String>{'text/plain; charset=utf-8': textUrl},
     });
 
 void main() {
@@ -73,7 +71,7 @@ void main() {
         ),
         random: Random(4),
       );
-      final TextCard card = await adapter.fetch();
+      final TextCard card = await adapter.fetch(preferEnglish: true);
 
       expect(card.attribution, contains('古登堡计划'));
       expect(card.title, 'Meditations');
